@@ -77,7 +77,7 @@ export class AuthenticationController {
   }
 
 
-  @Auth([])
+
   @Patch("refresh-token")
   async refreshToken(
     @User() user: UserDocument,

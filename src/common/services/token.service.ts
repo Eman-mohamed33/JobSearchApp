@@ -1,14 +1,16 @@
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { JwtService, JwtSignOptions, JwtVerifyOptions } from "@nestjs/jwt";
 import { JwtPayload } from "jsonwebtoken";
-import { RoleEnum, SignatureLevelEnum, TokenEnum } from "../enums";
-import { randomUUID } from "crypto";
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
-import { parseObjectId } from "../utils/objectId";
-import { LoginCredentialsResponse } from "../entities";
-import { UserRepository } from "src/DB/repositories/user.repository";
 import { UserDocument } from "src/DB/models/user.model";
 import { TokenRepository } from "src/DB/repositories/token.repository";
+import { UserRepository } from "src/DB/repositories/user.repository";
+import { LoginCredentialsResponse } from "../entities/token.entity";
+import { SignatureLevelEnum, TokenEnum } from "../enums/token.enum";
 import { TokenDocument } from "src/DB/models/token.model";
+import { randomUUID } from "crypto";
+import { parseObjectId } from "../utils/objectId";
+import { RoleEnum } from "../enums/user.enum";
+
 
 @Injectable()
 export class TokenService {
@@ -168,7 +170,7 @@ export class TokenService {
 
      return { user, decoded };
    } catch (error) {
-       throw new InternalServerErrorException(error.message || 'something went wrong!');
+       throw new InternalServerErrorException(error.message  || 'something went wrong!');
    }
   };
 

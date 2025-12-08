@@ -14,7 +14,7 @@ export interface ICompany {
   companyEmail: string;
 
   logo: IPicture;
-  coverPic: IPicture;
+  coverPic: IPicture[];
   legalAttachment: IPicture;
 
   approvedByAdmin: boolean;

@@ -1,14 +1,13 @@
 import { MongooseModule, Prop, Schema, SchemaFactory, Virtual } from "@nestjs/mongoose";
 import { HydratedDocument, Types } from "mongoose";
 import {
-  GenderEnum,
+  decryptEncryption,
   generateEncryption,
   generateHash,
   IPicture,
   IUser,
-  ProviderEnum,
-  RoleEnum,
 } from "src/common";
+import { GenderEnum, ProviderEnum, RoleEnum } from "src/common/enums/user.enum";
 
 @Schema({})
 export class Picture implements IPicture {
@@ -108,6 +107,18 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// userSchema.pre("findOne", async function (next) {
+//   const query = this.getQuery();
+//   if (query.mobileNumber) {
+//     //this.mobileNumber = await decryptEncryption({ plainText: this.mobileNumber });
+//     this.setQuery({
+//       ...query,
+//       mobileNumber: await decryptEncryption({ plainText: this.mobileNumber }),
+//     });
+//   }
+//   next();
+// });
 
 userSchema.pre(["find", "findOne"], function (next) {
   const query = this.getQuery();

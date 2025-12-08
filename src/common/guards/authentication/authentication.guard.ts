@@ -1,15 +1,15 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { tokenName } from "src/common/decorators";
-import { TokenEnum } from "src/common/enums";
+import { tokenName } from "src/common/decorators/token.type.decorator";
+import { TokenEnum } from "src/common/enums/token.enum";
 import { TokenService } from "src/common/services/token.service";
 
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
     private readonly tokenService: TokenService,
+    private readonly reflector: Reflector,
   ){}
   async canActivate(
     context: ExecutionContext,

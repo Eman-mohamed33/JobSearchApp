@@ -1,7 +1,7 @@
-import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { ICompany } from 'src/common';
-import { Picture } from './user.model';
+import { MongooseModule, Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Types } from "mongoose";
+import { ICompany } from "src/common";
+import { Picture } from "./user.model";
 
 @Schema({
   timestamps: true,
@@ -43,14 +43,20 @@ export class Company implements ICompany {
 
   @Prop({ type: Picture, required: true })
   logo: Picture;
-  @Prop({ type: Picture, required: true })
-  coverPic: Picture;
+  @Prop([{ type: Picture, required: true }])
+  coverPic: Picture[];
   @Prop({ type: Picture, required: true })
   legalAttachment: Picture;
 }
 
 export type CompanyDocument = HydratedDocument<Company>;
 const companySchema = SchemaFactory.createForClass(Company);
+companySchema.virtual("jobs", {
+  localField: "_id",
+  foreignField: "Company",
+  ref: "Job",
+});
+
 export const CompanyModel = MongooseModule.forFeature([
   {
     name: Company.name,

@@ -1,9 +1,9 @@
 import { Request } from "express";
 import { JwtPayload } from "jsonwebtoken";
-import { TokenEnum } from "../enums";
 import { Types } from "mongoose";
 import { IUser } from "./user.interface";
 import { UserDocument } from "src/DB/models/user.model";
+import { TokenEnum } from "../enums/token.enum";
 
 export interface IToken {
   _id?: Types.ObjectId;

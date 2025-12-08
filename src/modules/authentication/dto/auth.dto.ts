@@ -11,7 +11,8 @@ import {
   Validate,
   ValidateIf,
 } from "class-validator";
-import { CheckDateValidOrNot, GenderEnum, IsMatch, IUser, RoleEnum } from "src/common";
+import { CheckDateValidOrNot, IsMatch, IUser } from "src/common";
+import { GenderEnum, RoleEnum } from "src/common/enums/user.enum";
 
 export class ResendConfirmEmailOtp {
   @IsEmail()

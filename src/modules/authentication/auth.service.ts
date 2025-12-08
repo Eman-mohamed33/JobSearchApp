@@ -3,13 +3,14 @@ import { OtpRepository } from 'src/DB';
 import { ConfirmEmailBodyDto, LoginBodyDto, ResendConfirmEmailOtp, ResetPasswordBodyDto, SignupBodyDto, VerifyGmail } from './dto/auth.dto';
 import { Types } from 'mongoose';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
-import { compareHash, generateHash, ProviderEnum, TypeEnum } from 'src/common';
+import { compareHash, generateHash, TypeEnum } from 'src/common';
 import { generateOtp } from 'src/common/utils/otp';
 import { emailEvent } from 'src/common/utils/events/email.event';
 import { loginCredentials } from './entities/auth.entity';
 import { TokenService } from 'src/common/services/token.service';
 import { UserRepository } from 'src/DB/repositories/user.repository';
 import { UserDocument } from 'src/DB/models/user.model';
+import { ProviderEnum } from 'src/common/enums/user.enum';
 
 @Injectable()
 export class AuthenticationService {

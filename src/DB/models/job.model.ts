@@ -43,6 +43,7 @@ export class Job implements IJob {
 
 export type JobDocument = HydratedDocument<Job>;
 const jobSchema = SchemaFactory.createForClass(Job);
+
 export const JobModel = MongooseModule.forFeature([
   {
     name: Job.name,

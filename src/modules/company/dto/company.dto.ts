@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsString,
@@ -59,14 +60,47 @@ export class AddCompanyBodyDto implements Partial<ICompany> {
   @IsNotEmpty()
   companyEmail: string;
 
-//   @IsMongoId()
-//   @IsNotEmpty()
-//   createdBy: Types.ObjectId;
-
   @Validate(MongoDBIds)
   hRs: Types.ObjectId[];
 
   @IsString()
   @IsNotEmpty()
   legalAttachment: IPicture;
+}
+
+export class UpdateCompanyBodyDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(1000)
+  companyName: string;
+
+  @IsString()
+  @MinLength(10)
+  @MaxLength(50000)
+  description: string | undefined;
+
+  @IsString()
+  industry: string;
+
+  @IsString()
+  address: string;
+
+  @IsNumber()
+  @Length(11, 20)
+  numberOfEmployees: number;
+
+  @IsEmail()
+  companyEmail: string;
+
+  @Validate(MongoDBIds)
+  hRs: Types.ObjectId[];
+}
+export class CompanyParamDto {
+  @IsMongoId()
+  companyId: Types.ObjectId;
+}
+
+export class SearchQueryDto {
+  @IsString()
+  search: string;
 }

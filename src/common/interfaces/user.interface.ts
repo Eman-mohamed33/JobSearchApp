@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
-import { GenderEnum, ProviderEnum, RoleEnum } from '../enums';
 import { IOtp } from './otp.interface';
+import { GenderEnum, ProviderEnum, RoleEnum } from '../enums/user.enum';
 
 export interface IPicture {
   secure_url: string;
