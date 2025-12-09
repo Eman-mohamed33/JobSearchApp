@@ -1,23 +1,23 @@
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { JwtService, JwtSignOptions, JwtVerifyOptions } from "@nestjs/jwt";
 import { JwtPayload } from "jsonwebtoken";
-import { UserDocument } from "src/DB/models/user.model";
-import { TokenRepository } from "src/DB/repositories/token.repository";
-import { UserRepository } from "src/DB/repositories/user.repository";
-import { LoginCredentialsResponse } from "../entities/token.entity";
-import { SignatureLevelEnum, TokenEnum } from "../enums/token.enum";
-import { TokenDocument } from "src/DB/models/token.model";
 import { randomUUID } from "crypto";
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { parseObjectId } from "../utils/objectId";
+import { UserRepository } from "src/DB/repositories/user.repository";
+import { TokenRepository } from "src/DB/repositories/token.repository";
 import { RoleEnum } from "../enums/user.enum";
+import { SignatureLevelEnum, TokenEnum } from "../enums/token.enum";
+import { UserDocument } from "src/DB/models/user.model";
+import { LoginCredentialsResponse } from "../entities/token.entity";
+import { TokenDocument } from "src/DB/models/token.model";
 
 
 @Injectable()
 export class TokenService {
-  constructor(
-      private readonly jwtService: JwtService,
-      private readonly userRepository: UserRepository,
-      private readonly tokenRepository: TokenRepository,
+    constructor(
+        private readonly jwtService: JwtService,
+        private readonly userRepository: UserRepository,
+        private readonly tokenRepository:TokenRepository
     ) { }
 
   generateToken = async ({
@@ -170,7 +170,7 @@ export class TokenService {
 
      return { user, decoded };
    } catch (error) {
-       throw new InternalServerErrorException(error.message  || 'something went wrong!');
+       throw new InternalServerErrorException(error.message || 'something went wrong!');
    }
   };
 

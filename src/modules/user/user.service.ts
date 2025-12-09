@@ -121,14 +121,33 @@ export class UserService {
     return user;
   }
 
-  async uploadCoverPic(user: UserDocument, files: Express.Multer.File[]) {
-    const coverPiCs = await this.s3Service.uploadFilesOrLargeFiles({
+  async uploadCoverPic(user: UserDocument, files: Express.Multer.File[]): Promise<UserDocument> {
+
+    const oldCoverPics = user.coverPic.map(url => url.secure_url);
+    const coverPics = await this.s3Service.uploadFilesOrLargeFiles({
       storageApproach: StorageEnum.Disk,
-      path: `user/${user._id.toString()}/coverPictures`,
+      path: `users/${user.__v.toString()}/coverPic`,
       files
     });
 
+  
+    user.coverPic = coverPics.map(url => ({
+      secure_url: url,
+      public_id: url,
+    }));
+  
     await user.save();
+    if (!user) {
+      throw new BadRequestException("Fail to upload profile cover Images");
+    }
+
+    if (oldCoverPics.length) {
+      await this.s3Service.deleteFiles({
+        urls: oldCoverPics
+      });
+    }
+
+
     return user;
   }
 
@@ -155,8 +174,10 @@ export class UserService {
 
   async deleteCoverPic(user: UserDocument):
     Promise<UserDocument | lean<UserDocument>> {
-    await this.s3Service.deleteFile({
-      Key: user.profilePic.secure_url,
+    const oldCoverPics = user.coverPic.map(url => url.secure_url);
+
+    await this.s3Service.deleteFiles({
+      urls: oldCoverPics,
     });
 
     const updateUser = await this.userRepository.updateOne({
@@ -164,7 +185,7 @@ export class UserService {
         _id: user._id,
       },
       update: {
-        $set: { profilePic: null },
+        $set: { coverPic: null },
       }
     });
 

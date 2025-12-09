@@ -26,7 +26,7 @@ export interface IUser {
   changeCredentialTime?: Date;
 
   profilePic: IPicture;
-  coverPic: IPicture;
+  coverPic: IPicture[];
 
   role: RoleEnum;
   provider: ProviderEnum;

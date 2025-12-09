@@ -6,12 +6,16 @@ import { UpdateAccountBodyDto, UpdatePasswordBodyDto, UserParamDto } from "./dto
 import { UserResponse } from "./entities/user.entity";
 import { CloudFileUpload, fileValidation } from "src/common/utils/multer";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { RoleEnum } from "src/common/enums/user.enum";
+import { Auth } from "src/common/decorators/auth.decorator";
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller("user")
 export class UserController {
   constructor(private readonly userService: UserService) { }
   
+ 
+  @Auth([RoleEnum.Admin, RoleEnum.User])
   @Patch("update-profile")
   async updateAccount(
     @User() user: UserDocument,
@@ -21,6 +25,8 @@ export class UserController {
     return successResponse<UserResponse>({ data: { User }, status: 200 })
   }
 
+  
+  @Auth([RoleEnum.Admin, RoleEnum.User])
   @Get("profile")
   async getYourProfile(
     @User() user: UserDocument,
@@ -38,6 +44,8 @@ export class UserController {
   }
   
 
+  
+  @Auth([RoleEnum.Admin, RoleEnum.User])
   @Patch("update-password")
   async updatePassword(
     @User() user: UserDocument,
@@ -48,6 +56,7 @@ export class UserController {
   }
 
 
+  @Auth([RoleEnum.Admin, RoleEnum.User])
   @UseInterceptors(
     FileInterceptor(
       'picture',
@@ -65,6 +74,8 @@ export class UserController {
   }
   
 
+  
+  @Auth([RoleEnum.Admin, RoleEnum.User])
   @UseInterceptors(
     FilesInterceptor(
       'coverPictures',
@@ -82,6 +93,7 @@ export class UserController {
     return successResponse<UserResponse>({ data: { User }, status: 200 })
   }
 
+
   @Patch("delete-profile-picture")
   async deleteProfilePic(
     @User() user: UserDocument,
@@ -90,6 +102,7 @@ export class UserController {
     return successResponse<UserResponse>({ data: { User }, status: 200 })
   }
 
+  @Auth([RoleEnum.Admin])
   @Patch("delete-cover-pictures")
   async deleteCoverPic(
     @User() user: UserDocument,
@@ -98,6 +111,8 @@ export class UserController {
     return successResponse<UserResponse>({ data: { User }, status: 200 })
   }
 
+  
+  @Auth([RoleEnum.Admin, RoleEnum.User])
   @Patch(":userId/delete")
   async softDeleteAccount(
     @User() user: UserDocument,

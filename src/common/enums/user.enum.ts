@@ -12,3 +12,8 @@ export enum RoleEnum {
   User = 'user',
   Admin = 'admin',
 }
+
+export enum BanEnum {
+  Banned = "banned",
+  UnBanned = "unbanned",
+}

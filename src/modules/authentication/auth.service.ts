@@ -1,17 +1,17 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { OtpRepository } from 'src/DB';
 import { ConfirmEmailBodyDto, LoginBodyDto, ResendConfirmEmailOtp, ResetPasswordBodyDto, SignupBodyDto, VerifyGmail } from './dto/auth.dto';
 import { Types } from 'mongoose';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
-import { compareHash, generateHash, TypeEnum } from 'src/common';
+import { compareHash, generateHash, IAuthRequest, TypeEnum } from 'src/common';
 import { generateOtp } from 'src/common/utils/otp';
 import { emailEvent } from 'src/common/utils/events/email.event';
 import { loginCredentials } from './entities/auth.entity';
-import { TokenService } from 'src/common/services/token.service';
 import { UserRepository } from 'src/DB/repositories/user.repository';
 import { UserDocument } from 'src/DB/models/user.model';
 import { ProviderEnum } from 'src/common/enums/user.enum';
-
+import { TokenService } from 'src/common/services/token.service';
+import { JwtPayload } from "jsonwebtoken";
 @Injectable()
 export class AuthenticationService {
   private async verifyGmailAccount(idToken: string): Promise<TokenPayload> {
@@ -305,9 +305,12 @@ export class AuthenticationService {
     return 'Done';
   }
   
-  async refreshToken(user:UserDocument): Promise<loginCredentials> {
+  async refreshToken(user: UserDocument, req: IAuthRequest): Promise<loginCredentials> {
     
     const credentials = await this.tokenService.createLoginCredentials(user);
+
+    await this.tokenService.createRevokeToken(req.credentials.decoded as unknown as JwtPayload);
+
     return { credentials };
   }
 }

@@ -1,9 +1,12 @@
-import { Body, Controller, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Req, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthenticationService } from './auth.service';
-import { Auth, IResponse, successResponse, User } from 'src/common';
+import { type IAuthRequest, IResponse, successResponse, User } from 'src/common';
 import { ConfirmEmailBodyDto, LoginBodyDto, ResendConfirmEmailOtp, ResetPasswordBodyDto, SignupBodyDto, VerifyGmail } from './dto/auth.dto';
 import { loginCredentials } from './entities/auth.entity';
 import { type UserDocument } from 'src/DB/models/user.model';
+import { Auth } from 'src/common/decorators/auth.decorator';
+import { RoleEnum } from 'src/common/enums/user.enum';
+import { TokenEnum } from 'src/common/enums/token.enum';
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller("auth")
@@ -77,13 +80,14 @@ export class AuthenticationController {
   }
 
 
-
-  @Patch("refresh-token")
+  @Auth([RoleEnum.Admin, RoleEnum.User], TokenEnum.Refresh)
+  @Post("refresh-token")
   async refreshToken(
+    @Req() req: IAuthRequest,
     @User() user: UserDocument,
   ): Promise<IResponse<loginCredentials>> {
    
-    const credentials = await this.authenticationService.refreshToken(user);
+    const credentials = await this.authenticationService.refreshToken(user, req);
     return successResponse<loginCredentials>({ message: "Done", data: credentials, status: 201 });
   }
 }

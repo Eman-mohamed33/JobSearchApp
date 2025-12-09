@@ -5,7 +5,6 @@ import { AddCompanyBodyDto, SearchQueryDto, UpdateCompanyBodyDto } from "./dto/c
 import { S3Service, StorageEnum } from "src/common";
 import { Types } from "mongoose";
 import { RoleEnum } from "src/common/enums/user.enum";
-import { url } from "inspector";
 
 @Injectable()
 export class CompanyService {
@@ -163,7 +162,8 @@ export class CompanyService {
     }
 
 
-    async uploadCoverPic(user: UserDocument, companyId: Types.ObjectId, files: Express.Multer.File[]) {
+    async uploadCoverPic(user: UserDocument, companyId: Types.ObjectId, files: Express.Multer.File[]):
+        Promise<CompanyDocument | lean<CompanyDocument>> {
       
         const company = await this.companyRepository.findOne({
             filter: {
@@ -175,15 +175,24 @@ export class CompanyService {
         if (!company) {
             throw new NotFoundException("This company not exist");
         };
+        const oldCoverPics = company.coverPic.map(url => url.secure_url);
         const coverPictures = await this.s3Service.uploadFilesOrLargeFiles({
             storageApproach: StorageEnum.Disk,
             path: `company/${companyId.toString()}/cover`,
             files,
         });
 
-        coverPictures.map(url => {
-            company.coverPic[0].secure_url = url;
-        })
+        company.coverPic = coverPictures.map(url => ({
+            secure_url: url,
+            public_id: url,
+        }));
+  
+
+        if (oldCoverPics.length) {
+            await this.s3Service.deleteFiles({
+                urls: oldCoverPics
+            });
+        }
 
         await company.save();
         return company;
@@ -221,13 +230,36 @@ export class CompanyService {
         return company;
     }
 
-    // async deleteCoverPic(user: UserDocument, companyId: Types.ObjectId) {
-    //     //   await this.s3Service.deleteFiles({
-    //     //       urls: company.coverPic.map(url => {
-              
-    //     //       })
-    //     //   });
+    async deleteCoverPic(user: UserDocument, companyId: Types.ObjectId) {
+        const company = await this.companyRepository.findOne({
+            filter: {
+                _id: companyId,
+                createdBy: user._id,
+            }
+        });
 
-    //     return company;
-    // }
+        if (!company) {
+            throw new NotFoundException("This company not exist");
+        }
+        const oldCoverPics = company.coverPic.map(url => url.secure_url);
+
+        await this.s3Service.deleteFiles({
+            urls: oldCoverPics,
+        });
+
+        const updateCompany = await this.companyRepository.updateOne({
+            filter: {
+                _id: companyId,
+            },
+            update: {
+                $set: { coverPic: null },
+            }
+        });
+
+        if (!updateCompany.matchedCount) {
+            throw new BadRequestException("Fail to delete cover pictures");
+        }
+
+        return "Cover Pictures deleted successfully";
+    }
 }

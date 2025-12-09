@@ -60,8 +60,8 @@ export class User implements IUser {
 
   @Prop({ type: Picture })
   profilePic: Picture;
-  @Prop({ type: Picture })
-  coverPic: Picture;
+  @Prop([{ type: Picture }])
+  coverPic: Picture[];
 
   @Prop({ type: String, enum: ProviderEnum, default: ProviderEnum.System })
   provider: ProviderEnum;
