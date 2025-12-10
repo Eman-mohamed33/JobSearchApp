@@ -1,6 +1,6 @@
 import EventEmitter from "node:events";
 import Mail from "nodemailer/lib/mailer";
-import { sendEmail, verifyEmailTemplate } from "../email";
+import { acceptApplicationTemplate, sendEmail, verifyEmailTemplate } from "../email";
 import { TypeEnum } from "src/common/enums";
 import { log } from "node:console";
 
@@ -11,6 +11,7 @@ interface IEmail extends Mail.Options {
   userName?: string;
   Content?: string;
   field?: string;
+  companyName?: string;
 }
 
 emailEvent.on(TypeEnum.ConfirmEmail, async (data: IEmail) => {
@@ -35,6 +36,26 @@ emailEvent.on('SendForgotPasswordCode', async (data: IEmail) => {
         userEmail: data.to as string,
         title: 'Forgotten password code',
       })));
+    await sendEmail(data);
+  } catch (error) {
+    log(`Fail To Send Email To ${data.to}`, error);
+  }
+});
+
+emailEvent.on("acceptApplication", async (data: IEmail) => {
+  try {
+    ((data.subject = "Congratulations! Your Application Has Been Approved"),
+      (data.html = acceptApplicationTemplate(data.userName as string, data.companyName as string)));
+    await sendEmail(data);
+  } catch (error) {
+    log(`Fail To Send Email To ${data.to}`, error);
+  }
+});
+
+emailEvent.on("rejectApplication", async (data: IEmail) => {
+  try {
+    ((data.subject = "Your Application Result"),
+      (data.html = acceptApplicationTemplate(data.userName as string, data.companyName as string,)));
     await sendEmail(data);
   } catch (error) {
     log(`Fail To Send Email To ${data.to}`, error);

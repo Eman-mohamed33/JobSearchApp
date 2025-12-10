@@ -1,7 +1,6 @@
-import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { IJob, JobLocationEnum, SeniorityLevelEnum, WorkingTimeEnum } from 'src/common';
-
+import { MongooseModule, Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Types } from "mongoose";
+import { IJob, JobLocationEnum, SeniorityLevelEnum, WorkingTimeEnum } from "src/common";
 
 @Schema({
   timestamps: true,
@@ -15,34 +14,40 @@ import { IJob, JobLocationEnum, SeniorityLevelEnum, WorkingTimeEnum } from 'src/
 })
 export class Job implements IJob {
   @Prop({ type: Types.ObjectId, ref: "Company", required: true })
-  companyId: Types.ObjectId
+  companyId: Types.ObjectId;
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  addedBy: Types.ObjectId
+  addedBy: Types.ObjectId;
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  updatedBy: Types.ObjectId
+  updatedBy: Types.ObjectId;
 
   @Prop({ type: String, required: true })
-  jobTitle: string
+  jobTitle: string;
   @Prop({ type: String, required: true, minlength: 10, maxlength: 50000 })
-  jobDescription: string
+  jobDescription: string;
   @Prop([{ type: String, required: true }])
-  technicalSkills: string[]
+  technicalSkills: string[];
   @Prop([{ type: String, required: true }])
-  softSkills: string[]
+  softSkills: string[];
 
   @Prop({ type: Boolean, required: true })
-  closed: boolean
+  closed: boolean;
 
   @Prop({ type: String, enum: JobLocationEnum, required: true })
-  jobLocation: JobLocationEnum
+  jobLocation: JobLocationEnum;
   @Prop({ type: String, enum: WorkingTimeEnum, required: true })
-  workingTime: WorkingTimeEnum
+  workingTime: WorkingTimeEnum;
   @Prop({ type: String, enum: SeniorityLevelEnum, required: true })
-  seniorityLevel: SeniorityLevelEnum
+  seniorityLevel: SeniorityLevelEnum;
 }
 
 export type JobDocument = HydratedDocument<Job>;
 const jobSchema = SchemaFactory.createForClass(Job);
+
+jobSchema.virtual("applications", {
+  localField: "_id",
+  foreignField: "Job",
+  ref: "Application",
+});
 
 export const JobModel = MongooseModule.forFeature([
   {

@@ -11,7 +11,7 @@ import {
   Validate,
 } from "class-validator";
 import { Types } from "mongoose";
-import { CheckDateValidOrNot } from "src/common";
+import { CheckDateValidOrNot, IPicture } from "src/common";
 import { GenderEnum } from "src/common/enums/user.enum";
 
 export class UpdateAccountBodyDto {

@@ -1,18 +1,8 @@
-import {
-  IsArray,
-  IsEnum,
-  IsMongoId,
-  IsNotEmpty,
-  IsString,
-  MaxLength,
-  MinLength,
-} from "class-validator";
-import { Types } from "mongoose";
-import { IJob, JobLocationEnum, SeniorityLevelEnum, WorkingTimeEnum } from "src/common";
+import { Type } from "class-transformer";
+import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, MaxLength, MinLength } from "class-validator";
+import { IApplication, IJob, JobLocationEnum, SeniorityLevelEnum, WorkingTimeEnum } from "src/common";
 
 export class CreateJobBodyDto implements Partial<IJob> {
-  @IsMongoId()
-  companyId: Types.ObjectId;
   @IsString()
   @IsNotEmpty()
   jobTitle: string;
@@ -35,4 +25,21 @@ export class CreateJobBodyDto implements Partial<IJob> {
   workingTime: WorkingTimeEnum;
   @IsEnum(SeniorityLevelEnum)
   seniorityLevel: SeniorityLevelEnum;
+}
+
+export class GetAllDto {
+  @Type(() => Number)
+  @IsPositive()
+  @IsNumber()
+  @IsOptional()
+  page: number;
+  @Type(() => Number)
+  @IsPositive()
+  @IsNumber()
+  @IsOptional()
+  size: number;
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  search: string;
 }

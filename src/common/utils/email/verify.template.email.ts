@@ -87,3 +87,55 @@ export const verifyEmailTemplate = ({
 
 </html>`;
 };
+
+export const acceptApplicationTemplate = (userName: string, companyName: string): string => {
+    return `<h2 style="color: #2ecc71;">🎉 Congratulations!</h2>
+
+<p>Dear <b>${userName}</b>,</p>
+
+<p>
+We are pleased to inform you that your application has been 
+<b style="color: green;">accepted</b>.
+</p>
+
+<p>
+You are now officially part of our platform, and we look forward 
+to working with you.
+</p>
+
+<p>
+If you have any questions, feel free to contact our support team.
+</p>
+
+<br>
+
+<p>Best regards,</p>
+<p><b>${companyName}</b></p>
+`;
+};
+
+export const rejectApplicationTemplate = (userName: string, companyName: string): string => {
+    return `<h2 style="color: #e74c3c;">Application Update</h2>
+
+<p>Dear <b>${userName}</b>,</p>
+
+<p>
+Thank you for your interest in joining <b>{{companyName}}</b>.
+</p>
+
+<p>
+After careful review, we regret to inform you that your application
+has been <b style="color: red;">rejected</b> at this time.
+</p>
+
+<p>
+We truly appreciate your time and effort, and we encourage you
+to apply again in the future.
+</p>
+
+<br>
+
+<p>Wishing you all the best,</p>
+<p><b>${companyName}</b></p>
+`;
+};
