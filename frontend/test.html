@@ -1,0 +1,13 @@
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  const socket = io('http://localhost:3000');
+
+  socket.on('connect', () => {
+    console.log('Connected with id:', socket.id);
+  });
+
+  socket.on('sayHi', (payload) => {
+    console.log('sayHi received:', payload);
+    alert('sayHi: ' + JSON.stringify(payload));
+  });
+</script>

@@ -234,6 +234,17 @@ export class JobService {
         (user: UserDocument, jobId: Types.ObjectId,
             companyId: Types.ObjectId, file: Express.Multer.File):
         Promise<ApplicationDocument> {
+           const job = await this.jobRepository.findOne({
+            filter: {
+                _id: jobId,
+                companyId,
+            }
+        });
+
+        if (!job) {
+            throw new NotFoundException("Fail to find this job");
+        }
+        
         const Cv = await this.s3Service.uploadFile({
             storageApproach: StorageEnum.Disk,
             file,
@@ -251,6 +262,9 @@ export class JobService {
                 
             }]
         });
+
+     
+
 
         return application;
     }

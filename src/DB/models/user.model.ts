@@ -1,12 +1,6 @@
 import { MongooseModule, Prop, Schema, SchemaFactory, Virtual } from "@nestjs/mongoose";
 import { HydratedDocument, Types } from "mongoose";
-import {
-  decryptEncryption,
-  generateEncryption,
-  generateHash,
-  IPicture,
-  IUser,
-} from "src/common";
+import { decryptEncryption, generateEncryption, generateHash, IPicture, IUser } from "src/common";
 import { GenderEnum, ProviderEnum, RoleEnum } from "src/common/enums/user.enum";
 
 @Schema({})
@@ -136,3 +130,4 @@ export const UserModel = MongooseModule.forFeature([
     schema: userSchema,
   },
 ]);
+export const connectedSockets = new Map<string, string[]>();

@@ -16,9 +16,9 @@ export class AuthorizationGuard implements CanActivate {
         break;
       // case 'rpc':
       //   break;
-      // case 'ws':
-      //   role = context.switchToWs().getClient().credentials.user.role;
-      //   break;
+      case 'ws':
+        role = context.switchToWs().getClient().credentials.user.role;
+        break;
       case "graphql":
         role = GqlExecutionContext.create(context).getContext().req.credentials.user.role;
         break;
