@@ -1,15 +1,15 @@
-import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { IChat, IMessages } from 'src/common';
+import { MongooseModule, Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Types } from "mongoose";
+import { IChat, IMessages } from "src/common";
 
 @Schema({
   timestamps: true,
 })
 export class Messages implements IMessages {
   @Prop({ type: String, required: true })
-  message: string
+  message: string;
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  senderId: Types.ObjectId
+  senderId: Types.ObjectId;
 }
 
 @Schema({
@@ -24,11 +24,11 @@ export class Messages implements IMessages {
 })
 export class Chat implements IChat {
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  senderId: Types.ObjectId
+  senderId: Types.ObjectId;
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  receiverId: Types.ObjectId
+  receiverId: Types.ObjectId;
   @Prop([{ type: Messages, required: true }])
-  messages: Messages[]
+  messages: Messages[];
 }
 
 export type ChatDocument = HydratedDocument<Chat>;

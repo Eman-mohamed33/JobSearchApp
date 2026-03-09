@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsMongoId,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsStrongPassword,
   Matches,
@@ -11,27 +12,32 @@ import {
   Validate,
 } from "class-validator";
 import { Types } from "mongoose";
-import { CheckDateValidOrNot, IPicture } from "src/common";
+import { CheckDateValidOrNot } from "src/common";
 import { GenderEnum } from "src/common/enums/user.enum";
 
 export class UpdateAccountBodyDto {
   @IsString()
   @MinLength(2)
   @MaxLength(2000)
+  @IsOptional()
   firstName: string;
   @IsString()
   @MinLength(2)
   @MaxLength(2000)
+  @IsOptional()
   lastName: string;
   @IsEnum(GenderEnum)
+  @IsOptional()
   gender: GenderEnum;
 
   @IsDateString()
   @Validate(CheckDateValidOrNot)
+  @IsOptional()
   DOB: Date;
 
   @IsString()
   @Matches(/^(002|\+2)?01[0125][0-9]{8}$/)
+  @IsOptional()
   mobileNumber: string;
 }
 

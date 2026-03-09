@@ -75,6 +75,7 @@ export class AuthenticationService {
     const otp = String(generateOtp());
     await this.createConfirmEmailOtp(user._id, otp);
     emailEvent.emit(TypeEnum.ConfirmEmail, { to: email, otp });
+    console.log(user);
     return 'Done';
   }
 

@@ -62,19 +62,14 @@ export class UserService {
     const user = await this.userRepository.findOne({
       filter: {
         _id: userId,
+        isConfirmed:true,
       },
       select: {
-        userName: 1,
+        firstName: 1,
+        lastName:1,
         mobileNumber: 1,
-        gender: 1,
-        profilePic: {
-          public_id: 1,
-          secure_url: 1,
-        },
-        coverPic: {
-          public_id: 1,
-          secure_url: 1,
-        },
+        profilePic: 1,
+        coverPic: 1,
       }
     });
 
@@ -83,6 +78,7 @@ export class UserService {
     }
 
     return user;
+
   }
 
   async updatePassword(user: UserDocument, body: UpdatePasswordBodyDto):
@@ -196,12 +192,13 @@ export class UserService {
   }
 
   async softDeleteAccount(user: UserDocument, userId: Types.ObjectId): Promise<string> {
-    if (user.role !== RoleEnum.Admin && userId) {
+    if (user.role !== RoleEnum.Admin && user._id.toString() !== userId.toString()) {
       throw new BadRequestException("Not authorized user");
     }
-    const updatedUser = await this.userRepository.updateOne({
+    const updatedUser = await this.userRepository.findOneAndUpdate({
       filter: {
         _id: userId || user._id,
+        isConfirmed:true,
 
       },
       update: {
@@ -211,7 +208,7 @@ export class UserService {
       }
     });
 
-    if (!updatedUser.matchedCount) {
+    if (!updatedUser) {
       throw new BadRequestException("Fail to delete this account");
     }
 

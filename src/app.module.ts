@@ -14,6 +14,7 @@ import { GraphQLModule } from "@nestjs/graphql";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { JobModule } from "./modules/job/job.module";
 import { RealTimeModule } from "./modules/gateway/gateway.module";
+import { ChatModule } from "./modules/chat/chat.module";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { RealTimeModule } from "./modules/gateway/gateway.module";
     CompanyModule,
     JobModule,
     RealTimeModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, S3Service],

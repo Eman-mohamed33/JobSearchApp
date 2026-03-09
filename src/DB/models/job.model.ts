@@ -13,11 +13,11 @@ import { IJob, JobLocationEnum, SeniorityLevelEnum, WorkingTimeEnum } from "src/
   strictQuery: true,
 })
 export class Job implements IJob {
-  @Prop({ type: Types.ObjectId, ref: "Company", required: true })
+  @Prop({ type: Types.ObjectId, ref: "Company", required: false })
   companyId: Types.ObjectId;
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
   addedBy: Types.ObjectId;
-  @Prop({ type: Types.ObjectId, ref: "User", required: true })
+  @Prop({ type: Types.ObjectId, ref: "User", required: false })
   updatedBy: Types.ObjectId;
 
   @Prop({ type: String, required: true })
@@ -29,7 +29,7 @@ export class Job implements IJob {
   @Prop([{ type: String, required: true }])
   softSkills: string[];
 
-  @Prop({ type: Boolean, required: true })
+  @Prop({ type: Boolean, required: false })
   closed: boolean;
 
   @Prop({ type: String, enum: JobLocationEnum, required: true })

@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { CompanyDocument, CompanyRepository, lean } from "src/DB";
+import { ApplicationRepository, CompanyDocument, CompanyRepository, lean } from "src/DB";
 import { UserDocument } from "src/DB/models/user.model";
 import { AddCompanyBodyDto, SearchQueryDto, UpdateCompanyBodyDto } from "./dto/company.dto";
 import { S3Service, StorageEnum } from "src/common";
@@ -11,9 +11,11 @@ export class CompanyService {
     constructor(
         private readonly companyRepository: CompanyRepository,
         private readonly s3Service: S3Service,
+        //private readonly applicationRepository:ApplicationRepository
     ) { }
     
-    async addCompany(body: AddCompanyBodyDto, user: UserDocument, file: Express.Multer.File) :Promise<CompanyDocument>{
+    async addCompany(body: AddCompanyBodyDto, user: UserDocument): Promise<CompanyDocument>
+    {
         
         const checkCompanyExist = await this.companyRepository.findOne({
             filter: {
@@ -26,20 +28,20 @@ export class CompanyService {
             throw new ConflictException("This company is already exist");
         }
 
-        const legalAttachment = await this.s3Service.uploadFile({
-            storageApproach: StorageEnum.Disk,
-            file,
-            path: `company/${user._id.toString()}/documents`,
-        });
+        // const legalAttachment = await this.s3Service.uploadFile({
+        //     storageApproach: StorageEnum.Disk,
+        //     file,
+        //     path: `company/${user._id.toString()}/documents`,
+        // });
 
         const [company] = await this.companyRepository.create({
             data: [{
                 ...body,
                 createdBy: user._id,
-                legalAttachment: {
-                    secure_url: legalAttachment,
-                    public_id: legalAttachment,
-                },
+                // legalAttachment: {
+                //     secure_url: legalAttachment,
+                //     public_id: legalAttachment,
+                // },
                 approvedByAdmin: user.role === RoleEnum.Admin ? true : false,
             }]
         })
@@ -80,7 +82,8 @@ export class CompanyService {
             options: {
                 populate: [
                     {
-                        path: "jobs"
+                        path: "jobs",
+                        // select:"jobTitle jobDescription workingTime seniorityLevel"
                     }
                 ]
             }
@@ -94,9 +97,10 @@ export class CompanyService {
 
     async searchForACompany(query: SearchQueryDto):
         Promise<CompanyDocument | lean<CompanyDocument>> {
+        // { $regex: query.search, options: "i" }
         const company = await this.companyRepository.findOne({
             filter: {
-                companyName: { $regex: query.search, options: "i" },
+                companyName:{ $regex: query.search, $options: "i" } ,
             },
         });
 
@@ -118,13 +122,17 @@ export class CompanyService {
             throw new NotFoundException("This company not exist");
         }
 
-        if (user.role !== RoleEnum.Admin && company.createdBy !== user._id) {
+        if (user.role === RoleEnum.User && company.createdBy.toString() !== user._id.toString()) {
             throw new BadRequestException("Not Authorized Account");
         }
 
+        // if (company.createdBy !== user._id && user.role === RoleEnum.User ) {
+        //     throw new BadRequestException("Not Authorized Account");
+        // }
+
         const updatedCompany = await this.companyRepository.updateOne({
             filter: {
-                _id: companyId,
+                _id: companyId, 
             },
             update: {
                 deletedAt: new Date(),
@@ -160,7 +168,6 @@ export class CompanyService {
         await company.save();
         return company;
     }
-
 
     async uploadCoverPic(user: UserDocument, companyId: Types.ObjectId, files: Express.Multer.File[]):
         Promise<CompanyDocument | lean<CompanyDocument>> {
@@ -262,4 +269,6 @@ export class CompanyService {
 
         return "Cover Pictures deleted successfully";
     }
+
+   
 }

@@ -1,1 +1,1 @@
-export * from "./s3.service";
+export * from "./b2.service";

@@ -1,13 +1,85 @@
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-  const socket = io('http://localhost:3000');
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Notification Center</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; background-color: #f9f9f9; }
+        .header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        #notification-badge { background: red; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; display: none; font-weight: bold; }
+        #notifications-list { border: 1px solid #ddd; border-radius: 8px; background: white; width: 100%; max-width: 400px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .list-header { padding: 10px; border-bottom: 1px solid #eee; background: #f0f0f0; border-radius: 8px 8px 0 0; }
+        #notif-items { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
+        .notif-item { padding: 15px; border-bottom: 1px solid #eee; transition: background 0.3s; }
+        .notif-item:hover { background: #fcfcfc; }
+        button { cursor: pointer; background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-top: 5px; }
+    </style>
+</head>
+<body>
 
-  socket.on('connect', () => {
-    console.log('Connected with id:', socket.id);
-  });
+    <div class="header">
+        <h2>إشعارات الـ HR</h2>
+        <div id="notification-badge">0</div>
+    </div>
 
-  socket.on('sayHi', (payload) => {
-    console.log('sayHi received:', payload);
-    alert('sayHi: ' + JSON.stringify(payload));
-  });
-</script>
+    <div id="notifications-list">
+        <div class="list-header"><strong>التنبيهات الواردة:</strong></div>
+        <ul id="notif-items"></ul>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // تأكدي أن الـ URL والبورت صح
+    //     const socket = io("http://localhost:3000", 
+    //     {
+    //         auth: {
+    //             token: "TEST_TOKEN", 
+    //             userId: "HR_123" 
+    //         }
+    //     }
+    //   );
+
+      const socket = io("http://localhost:3000", {
+    auth: {
+        userId: "6997ad7718de47b98452b0d0" // لازم يتطابق مع اللي السيرفر مستنيه
+    }
+});
+        socket.on("connect", () => {
+            console.log("Connected to Server! ID:", socket.id);
+        });
+
+        socket.on("SubmittingNotification", (data) => {
+            console.log("Received:", data);
+            updateBadge();
+
+            const list = document.getElementById('notif-items');
+            const li = document.createElement('li');
+            li.className = 'notif-item';
+            
+            li.innerHTML = `
+                <div style="font-weight: bold; color: #333;">${data.title}</div>
+                <div style="font-size: 0.9em; color: #666; margin: 5px 0;">${data.message}</div>
+                <button onclick="viewApplication('${data.payload.applicationId}')">عرض طلب التقديم</button>
+            `;
+            
+            list.prepend(li);
+            
+            // صوت التنبيه
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(e => console.log("Audio play deferred until user interaction."));
+        });
+
+        function updateBadge() {
+            const badge = document.getElementById('notification-badge');
+            let count = parseInt(badge.innerText) || 0;
+            badge.innerText = count + 1;
+            badge.style.display = 'inline-block';
+        }
+
+        function viewApplication(id) {
+            alert("فتح التقديم رقم: " + id);
+        }
+    </script>
+</body>
+</html>

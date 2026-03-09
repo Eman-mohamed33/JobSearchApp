@@ -164,9 +164,9 @@ export class TokenService {
        throw new BadRequestException('User not Registered');
      }
 
-     if (user.changeCredentialTime?.getTime() || 0 > decoded.iat * 1000) {
-       throw new UnauthorizedException('Invalid or Old Login Credentials');
-     }
+    //  if (user.changeCredentialTime?.getTime() || 0 > decoded.iat * 1000) {
+    //    throw new UnauthorizedException('Invalid or Old Login Credentials1');
+    //  }
 
      return { user, decoded };
    } catch (error) {

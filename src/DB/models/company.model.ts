@@ -41,11 +41,11 @@ export class Company implements ICompany {
   @Prop({ type: Boolean })
   approvedByAdmin: boolean;
 
-  @Prop({ type: Picture, required: true })
+  @Prop({ type: Picture, required: false })
   logo: Picture;
-  @Prop([{ type: Picture, required: true }])
+  @Prop([{ type: Picture, required: false }])
   coverPic: Picture[];
-  @Prop({ type: Picture, required: true })
+  @Prop({ type: Picture, required: false })
   legalAttachment: Picture;
 }
 
@@ -53,8 +53,18 @@ export type CompanyDocument = HydratedDocument<Company>;
 const companySchema = SchemaFactory.createForClass(Company);
 companySchema.virtual("jobs", {
   localField: "_id",
-  foreignField: "Company",
+  foreignField: "companyId",
   ref: "Job",
+});
+
+companySchema.pre(["find", "findOne", "findOneAndUpdate"], function (next) {
+  const query = this.getQuery();
+  if (query.paranoid === false) {
+    this.setQuery({ ...query });
+  } else {
+    this.setQuery({ ...query, deletedAt: { $exists: false } });
+  }
+  next();
 });
 
 export const CompanyModel = MongooseModule.forFeature([

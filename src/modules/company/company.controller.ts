@@ -6,29 +6,33 @@ import { IResponse, StorageEnum, successResponse, User } from "src/common";
 import { CompanyResponse } from "./entities/company.entity";
 import { AddCompanyBodyDto, CompanyParamDto, SearchQueryDto, UpdateCompanyBodyDto } from "./dto/company.dto";
 import { type UserDocument } from "src/DB/models/user.model";
+import { Auth } from "src/common/decorators/auth.decorator";
+import { RoleEnum } from "src/common/enums/user.enum";
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller("company")
 export class CompanyController {
     constructor(private readonly companyService: CompanyService) { }
     
-    @UseInterceptors(
-        FileInterceptor(
-            'document',
-            CloudFileUpload({
-                storageApproach: StorageEnum.Disk,
-                validation: fileValidation.document || fileValidation.image,
-            })))
+    // @UseInterceptors(
+    //     FileInterceptor(
+    //         'document',
+    //         CloudFileUpload({
+    //             storageApproach: StorageEnum.Disk,
+    //             validation: fileValidation.document || fileValidation.image,
+    //         })))
+    @Auth([RoleEnum.Admin, RoleEnum.User])
     @Post("/")
     async addCompany(
         @Body() body: AddCompanyBodyDto,
         @User() user: UserDocument,
-        @UploadedFile(ParseFilePipe) file: Express.Multer.File,
+       // @UploadedFile(ParseFilePipe) file: Express.Multer.File,
     ): Promise<IResponse<CompanyResponse>>{
-        const company = await this.companyService.addCompany(body, user, file);
+        const company = await this.companyService.addCompany(body, user);
         return successResponse<CompanyResponse>({ status: 201, data: { company } });
     }
 
+     @Auth([RoleEnum.Admin, RoleEnum.User])
     @Patch(":companyId/update-company-data")
     async updateCompanyData(
         @Body() body: UpdateCompanyBodyDto,
@@ -49,7 +53,7 @@ export class CompanyController {
     }
 
 
-    @Get()
+    @Get("/")
     async searchForACompany(
         @Query() query: SearchQueryDto,
    ): Promise<IResponse<CompanyResponse>>{
@@ -58,6 +62,7 @@ export class CompanyController {
     }
 
 
+    @Auth([RoleEnum.Admin, RoleEnum.User])
     @Patch(":companyId/delete")
     async softDeleteCompany(
         @User() user: UserDocument,

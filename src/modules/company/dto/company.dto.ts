@@ -1,8 +1,10 @@
+import { Type } from "class-transformer";
 import {
   IsEmail,
   IsMongoId,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Length,
   MaxLength,
@@ -53,7 +55,6 @@ export class AddCompanyBodyDto implements Partial<ICompany> {
   address: string;
 
   @IsNumber()
-  @Length(11, 20)
   numberOfEmployees: number;
 
   @IsEmail()
@@ -65,6 +66,7 @@ export class AddCompanyBodyDto implements Partial<ICompany> {
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   legalAttachment: IPicture;
 }
 
@@ -72,31 +74,39 @@ export class UpdateCompanyBodyDto {
   @IsString()
   @MinLength(2)
   @MaxLength(1000)
+  @IsOptional()
   companyName: string;
 
   @IsString()
   @MinLength(10)
   @MaxLength(50000)
+  @IsOptional()
   description: string | undefined;
 
   @IsString()
+  @IsOptional()
   industry: string;
 
   @IsString()
+  @IsOptional()
   address: string;
 
   @IsNumber()
   @Length(11, 20)
+  @IsOptional()
   numberOfEmployees: number;
 
   @IsEmail()
+  @IsOptional()
   companyEmail: string;
 
   @Validate(MongoDBIds)
+  @IsOptional()
   hRs: Types.ObjectId[];
 }
 export class CompanyParamDto {
   @IsMongoId()
+  @Type(() => Types.ObjectId)
   companyId: Types.ObjectId;
 }
 

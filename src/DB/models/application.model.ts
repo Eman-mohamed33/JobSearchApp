@@ -18,7 +18,7 @@ export class Application implements IApplication {
   jobId: Types.ObjectId
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
   userId: Types.ObjectId
-  @Prop({ type: Picture, required: true })
+  @Prop({ type: Picture, required: false })
   userCv: Picture
   @Prop({ type: String, enum: StatusEnum, default: StatusEnum.Pending })
   status: StatusEnum

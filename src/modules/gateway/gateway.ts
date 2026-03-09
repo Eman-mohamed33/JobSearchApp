@@ -7,6 +7,7 @@ import { TokenEnum } from "src/common/enums/token.enum";
 import { RoleEnum } from "src/common/enums/user.enum";
 import { TokenService } from "src/common/services/token.service";
 import { connectedSockets, type UserDocument } from "src/DB/models/user.model";
+import { ChatService } from "../chat/chat.service";
 @WebSocketGateway({
     cors: {
         origin: "*",
@@ -16,6 +17,7 @@ import { connectedSockets, type UserDocument } from "src/DB/models/user.model";
 export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnGatewayDisconnect{
     @WebSocketServer()
     private readonly server: Server;
+   // private readonly chatService: ChatService
     constructor(private readonly tokenService: TokenService,
     ) { }
     afterInit(server: Server) {
@@ -25,51 +27,59 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
         });
     }
 
-     handleConnection(client: ISocketAuth) {
-       // try{
-        //  const authorization = getSocketAuth(client);
+    async handleConnection(client: ISocketAuth) {
+      try{
+         const authorization = getSocketAuth(client);
 
-        // console.log(authorization);
-        // const { user, decoded } = await this.tokenService.decodeToken({ authorization, tokenType: TokenEnum.Access });
-        //     console.log({ user, decoded });
-        //     const userTabs = connectedSockets.get(user._id.toString()) || [];
-        //     userTabs.push(client.id);
-        //     connectedSockets.set(user._id.toString(), userTabs);
-        //     client.credentials = { user, decoded };
-        //     console.log({ userTabs, connectedSockets });
-            
-        // } catch (error) {
-        //     client.emit("exception", error.message || "something went wrong");
-            // }
+        console.log({authorization});
+        const { user, decoded } = await this.tokenService.decodeToken({ authorization, tokenType: TokenEnum.Access });
+            console.log("User,decode",{ user, decoded });
+            const userTabs = connectedSockets.get(user._id.toString()) || [];
+            userTabs.push(client.id);
+            connectedSockets.set(user._id.toString(), userTabs);
+           client.credentials = { user, decoded };
+          console.log("User Connected:", client.id);
+            const userId = user?._id?.toString() as string;
+        if (userId) {
+        client.join(userId.toString()); // هنا بنعمل الأوضة برقم الـ ID
+        console.log(`User ${userId} joined their private room`);
+        }
+            //this.j();
+            //console.log({ userTabs, connectedSockets });
+         
+          
+          // client.join(`user_${user._id.toString() as string}`);
+      } catch (error) {
+           client.emit("exception", error.message || "something went wrong");
+            }
           console.log('Client connected:', client.id);
     }
 
 
-    //@Auth([RoleEnum.User])
-    @SubscribeMessage("sayHi")
+    @Auth([RoleEnum.User])
+    @SubscribeMessage("sendMessage")
     sayHi(
-        // @ConnectedSocket() client: ISocketAuth,
-        // @MessageBody() data: any,
+         @ConnectedSocket() client: ISocketAuth,
+        @MessageBody() data: any,
       //  @User() user: UserDocument
     ) {
-        console.log("send");      
-      // client.emit("sayHi", "Nest To FE");
-        //this.server.emit("sayHi", "Oml");
-    //this.server.emit("sayHi", { name: "EmanGesraha❤️❤️❤️❤️❤️❤️❤️" });
-      console.log("Sending test sayHi to all sockets");
-            this.server.emit("sayHi", { name: "test" });
-  
-       // this.server.emit("sayHi", { name: "eman" });
-
-        console.log("SENDING sayHi now");
-      //  client.broadcast.emit("sayHi", "From Nest To All Except message sender");
-        
-      // return "received Date"
+        console.log({ data });
+        client.emit("receiveMessage",{
+        sender: "Server",    // بدل msg خليها sender
+        message: "man"       // بدل receivedData خليها message
+    }
+        );
+       return "received Date"
     }
 
     
     handleDisconnect(client: Socket) {
-        //  const userId = client.credentials?.user._id?.toString() as string;
+        // const userId = client.credentials?.user._id?.toString() as string;
+        // if (userId) {
+        // client.join(userId.toString()); // هنا بنعمل الأوضة برقم الـ ID
+        // console.log(`User ${userId} joined their private room`);
+        // }
+        
         // const remainingTabs = connectedSockets.get(userId)?.filter(tab => {
         //     return tab !== client.id;
         // });
@@ -86,19 +96,50 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
              console.log('Client disconnected:', client.id);
     }
 
-
-    // welcome() {
-    //     this.server.emit("welcome", "Oml");
-    // }
-   
-    // @Auth([RoleEnum.User])
-    // @SubscribeMessage("submittedApplication")
-    // NotifyTheHr(
-    //     @User() user: UserDocument,
-    //     hrId: Types.ObjectId,
-    // ) {
-    //     this.server.to(connectedSockets.get(hrId.toString()) as string[]).emit("submittedApplication", { from: user._id });
-    // }
+//     j() {
+//         console.log("J function is running");
+//         console.log("Emitting Notification...")
+//         this.server.sockets.emit("SubmittingNotification", {
+//     title: "تقديم جديد على وظيفة!",
+//     message: "قام أحمد محمد بالتقديم على وظيفة Frontend Developer",
+//     payload: {
+//         applicationId: "APP_9955",
+//         jobId: "JOB_101"
+//             }
     
+// });
+//     }
+
+    Submitting_Notification(hrId: string,
+        notification: {
+            title: string,
+            message: string,
+            payload: {
+                jobId: Types.ObjectId,
+                applicationId: Types.ObjectId,
+                seekerId: Types.ObjectId
+            },
+            timestamp: Date,
+        }) {
+        this.server.to(hrId.toString()).emit("SubmittingNotification", notification);
+    }
+
+    async send_Messages(
+         
+            senderId: string,
+            receiverId: string,
+        message: string,
+        socket: ISocketAuth
+        
+    ) {
+        // this.server.to(receiverId).on("sendMessages", { senderId, receiverId, messages });
+     //   await this.chatService.sendMessagesBetweenHrAndUser(socket.credentials.user,receiverId, message);
+         this.server?.to(connectedSockets.get(senderId) as string[]).emit("successMessage", { message });
+         
+
+            this.server?.to(connectedSockets.get(receiverId) as string[]).emit("newMessage", { message, from: socket.credentials?.user });
+         
+    }
+   
 
 }

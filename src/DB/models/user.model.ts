@@ -28,8 +28,12 @@ export class User implements IUser {
   lastName: string;
 
   @Virtual({
+    set: function (value: string) {
+      const [firstName, lastName] = value.split(" ") || [];
+      this.set({ firstName, lastName });
+    },
     get: function (this: User) {
-      return `${this.firstName} ${this.lastName}`;
+      return this.firstName + " " + this.lastName;
     },
   })
   userName: string;
@@ -101,18 +105,12 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
-
-// userSchema.pre("findOne", async function (next) {
-//   const query = this.getQuery();
-//   if (query.mobileNumber) {
-//     //this.mobileNumber = await decryptEncryption({ plainText: this.mobileNumber });
-//     this.setQuery({
-//       ...query,
-//       mobileNumber: await decryptEncryption({ plainText: this.mobileNumber }),
-//     });
-//   }
-//   next();
-// });
+userSchema.post("findOne", async function (doc) {
+  //const query = this.getQuery();
+  if (doc && (doc.mobileNumber as string)) {
+    doc.mobileNumber = await decryptEncryption({ cipherText: doc.mobileNumber as string });
+  }
+});
 
 userSchema.pre(["find", "findOne"], function (next) {
   const query = this.getQuery();
