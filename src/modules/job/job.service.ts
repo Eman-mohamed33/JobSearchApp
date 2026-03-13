@@ -7,9 +7,8 @@ import { S3Service, StatusEnum } from "src/common";
 import { emailEvent } from "src/common/utils/events/email.event";
 import { UserRepository } from "src/DB/repositories/user.repository";
 import { RealTimeGateway } from "../gateway/gateway";
-import { CompanyParamDto } from "../company/dto/company.dto";
 import { createExcelSheet } from "src/common/utils/files/Excelsheet.file";
-import { timeStamp } from "console";
+
 
 @Injectable()
 export class JobService {
@@ -126,12 +125,16 @@ export class JobService {
         return "Job deleted successfully";
     }
 
-    async getOneJobForSCompany(companyId: Types.ObjectId, jobId: Types.ObjectId):
+    async getOneJobForSCompany(param: JobParamDto):
         Promise<JobDocument | lean<JobDocument>> {
+        console.log(param.jobId);
+        console.log(typeof param.jobId);
+
         const job = await this.jobRepository.findOne({
             filter: {
-                companyId,
-                _id: jobId,
+                _id: Types.ObjectId.createFromHexString(param.jobId.toString()),
+                companyId: Types.ObjectId.createFromHexString(param.companyId.toString()),
+              
             }
         });
 
@@ -142,23 +145,19 @@ export class JobService {
         return job;
     }
 
-    async getAllJobsOrOneJobForSCompany(companyId: Types.ObjectId, query: GetAllDto, jobId: Types.ObjectId)
-        : Promise<
-        {
+    async getAllJobsOrOneJobForSCompany(param:JobParamDto, query: GetAllDto)
+        : Promise<{
             docsCount?: number,
             pages?: number,
             currentPage?: number | string,
             limit?: number,
-            result: JobDocument[]  | lean<JobDocument>[],
-  }> {
+            result: JobDocument[] | lean<JobDocument>[],
+        }> {
         
-        // if (jobId) {
-        //  return await this.getOneJobForSCompany(companyId, jobId);
-        // }
-        const { page, size } = query;
+        const { size, page } = query;
         const jobs = await this.jobRepository.paginate({
             filter: {
-                companyId,
+                companyId: Types.ObjectId.createFromHexString(param.companyId.toString()),
             },
             page,
             size,
@@ -167,29 +166,37 @@ export class JobService {
             }
         });
 
-        if (!jobs.result) {
+        if (!jobs) {
             throw new NotFoundException("The company has no job openings.");
         }
 
         return jobs;
-    }    
+    }
 
-    async getAllJobs(companyId: Types.ObjectId, query: GetAllDto):
-        Promise<JobDocument[] | lean<JobDocument>[]> {
-        //const { search } = query;
-        const jobs = await this.jobRepository.find({
+    async getAllJobs(param: JobParamDto, query: GetAllDto):
+        Promise<{
+            docsCount?: number,
+            pages?: number,
+            currentPage?: number | string,
+            limit?: number,
+            result: JobDocument[] | lean<JobDocument>[],
+        }> {
+        const { page, size, search } = query;
+        const jobs = await this.jobRepository.paginate({
             filter: {
-                companyId,
-                // $or: [
-                //     { workingTime: { $regex: search, $options: "i" } },
-                //     { jobDescription: { $regex: search, $options: "i" } },
-                //     { jobTitle: { $regex: search, $options: "i" } },
-                //     { seniorityLevel: { $regex: search, $options: "i" } },
-                //     { technicalSkills: { $regex: search, $options: "i" } },
-                // ]
+                companyId: Types.ObjectId.createFromHexString(param.companyId.toString()),
+                 ...(search ? {
+                $or: [
+                    { workingTime: { $regex: search, $options: "i" } },
+                    { jobDescription: { $regex: search, $options: "i" } },
+                    { jobTitle: { $regex: search, $options: "i" } },
+                    { seniorityLevel: { $regex: search, $options: "i" } },
+                    { technicalSkills: { $regex: search, $options: "i" } },
+                     ]
+                } : {}),
             },
-            // page,
-            // size,
+            page,
+            size,
             options: {
                 sort: { createdAt: 1 },
             }
@@ -208,12 +215,12 @@ export class JobService {
             pages?: number,
             currentPage?: number | string,
             limit?: number,
-            result: JobDocument[] | lean<JobDocument>[],
+            result: ApplicationDocument[] | lean<ApplicationDocument>[],
         }> {
 
         const company = await this.companyRepository.findOne({
             filter: {
-                _id: param.companyId,
+                _id: Types.ObjectId.createFromHexString(param.companyId.toString()),
                 $or: [
                     { createdBy: user._id },
                     { hRs: user._id },
@@ -225,9 +232,9 @@ export class JobService {
             throw new NotFoundException("Company not exist");
         }
         const { page, size } = query;
-        const applications = await this.jobRepository.paginate({
+        const applications = await this.applicationRepository.paginate({
             filter: {
-                jobId: param.jobId,
+                jobId: Types.ObjectId.createFromHexString(param.jobId.toString()),
                 
             },
             page,
@@ -235,23 +242,19 @@ export class JobService {
             options: {
                 sort: { createdAt: 1 },
                 populate: [{
-                    path: "applications",
-                    populate: [{
-                        path: "userId"
-                    }]
+                    path: "userId",
                 }]
             }
         });
 
-        if (!applications.result) {
+        if (!applications) {
             throw new NotFoundException("The company has no job applications.");
         }
 
         return applications;
     }
 
-    async applyToJob
-        (user: UserDocument, jobId: Types.ObjectId,
+    async applyToJob(user: UserDocument, jobId: Types.ObjectId,
             companyId: Types.ObjectId):Promise<ApplicationDocument> {
         
             const job = await this.jobRepository.findOne({
