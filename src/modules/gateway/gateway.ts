@@ -8,6 +8,9 @@ import { RoleEnum } from "src/common/enums/user.enum";
 import { TokenService } from "src/common/services/token.service";
 import { connectedSockets, type UserDocument } from "src/DB/models/user.model";
 import { ChatService } from "../chat/chat.service";
+import { ChatRepository, CompanyRepository } from "src/DB";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { UserRepository } from "src/DB/repositories/user.repository";
 @WebSocketGateway({
     cors: {
         origin: "*",
@@ -17,13 +20,19 @@ import { ChatService } from "../chat/chat.service";
 export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnGatewayDisconnect{
     @WebSocketServer()
     private readonly server: Server;
-   // private readonly chatService: ChatService
-    constructor(private readonly tokenService: TokenService,
+    constructor(private readonly companyRepository: CompanyRepository,
+        private readonly chatRepository: ChatRepository,
+        private readonly chatService: ChatService,
+        private readonly tokenService: TokenService,
+               private readonly userRepository: UserRepository,
     ) { }
     afterInit(server: Server) {
         console.log("RealTime gateway Started ✨");
         server.on("connection", (socket: Socket) => {
             console.log(socket.id);
+            //this.sendMessage(socket as ISocketAuth, server);
+            
+
         });
     }
 
@@ -39,13 +48,13 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
             connectedSockets.set(user._id.toString(), userTabs);
            client.credentials = { user, decoded };
           console.log("User Connected:", client.id);
-            const userId = user?._id?.toString() as string;
+            const userId = user?._id?.toString();
         if (userId) {
         client.join(userId.toString()); // هنا بنعمل الأوضة برقم الـ ID
         console.log(`User ${userId} joined their private room`);
         }
             //this.j();
-            //console.log({ userTabs, connectedSockets });
+            console.log({ userTabs, connectedSockets });
          
           
           // client.join(`user_${user._id.toString() as string}`);
@@ -56,21 +65,27 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
     }
 
 
-    @Auth([RoleEnum.User])
-    @SubscribeMessage("sendMessage")
-    sayHi(
-         @ConnectedSocket() client: ISocketAuth,
-        @MessageBody() data: any,
-      //  @User() user: UserDocument
-    ) {
-        console.log({ data });
-        client.emit("receiveMessage",{
-        sender: "Server",    // بدل msg خليها sender
-        message: "man"       // بدل receivedData خليها message
-    }
-        );
-       return "received Date"
-    }
+    // @Auth([RoleEnum.User, RoleEnum.Admin])
+    // @SubscribeMessage("sendMessage")
+    // async handleSendMessage(
+    //      @ConnectedSocket() client: ISocketAuth,
+    //     @MessageBody() data: { message: string, receiverId: string },
+    //   //  @User() user: UserDocument
+    // ) {
+    //   try {
+    //      console.log("Check chatService:", !!this.chatService);
+    //     console.log("Data received:", data);
+    //    await this.chatService.sendMessagesBetweenHrAndUser({ 
+    //         ...data, 
+    //         socket: client, 
+    //         io: this.server 
+    //    });
+    //     return { status: "success" };
+    //   } catch (error:any) {
+    //     console.error("Error in sendMessage Gateway:", error);
+    //     client.emit("exception", error.message || "Failed to send message");
+    //   }
+    // }
 
     
     handleDisconnect(client: Socket) {
@@ -96,19 +111,6 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
              console.log('Client disconnected:', client.id);
     }
 
-//     j() {
-//         console.log("J function is running");
-//         console.log("Emitting Notification...")
-//         this.server.sockets.emit("SubmittingNotification", {
-//     title: "تقديم جديد على وظيفة!",
-//     message: "قام أحمد محمد بالتقديم على وظيفة Frontend Developer",
-//     payload: {
-//         applicationId: "APP_9955",
-//         jobId: "JOB_101"
-//             }
-    
-// });
-//     }
 
     Submitting_Notification(hrId: string,
         notification: {
@@ -124,22 +126,106 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
         this.server.to(hrId.toString()).emit("SubmittingNotification", notification);
     }
 
-    async send_Messages(
-         
-            senderId: string,
-            receiverId: string,
-        message: string,
-        socket: ISocketAuth
+    @Auth([RoleEnum.User, RoleEnum.Admin])
+    @SubscribeMessage("sendMessage")
+    async test(@ConnectedSocket() client: ISocketAuth,
+        @MessageBody() data: { message: string, receiverId: string })  {
+        console.log("Test event received from client:", client.id);
+        console.log("Received Data :",data);
+        //console.log("Connected Sockets:", connectedSockets);
         
-    ) {
-        // this.server.to(receiverId).on("sendMessages", { senderId, receiverId, messages });
-     //   await this.chatService.sendMessagesBetweenHrAndUser(socket.credentials.user,receiverId, message);
-         this.server?.to(connectedSockets.get(senderId) as string[]).emit("successMessage", { message });
-         
+        const createdBy = client.credentials.user._id;
+        console.log("CreatedBY :", createdBy);
+        console.log("CreatedBY :", typeof createdBy);
 
-            this.server?.to(connectedSockets.get(receiverId) as string[]).emit("newMessage", { message, from: socket.credentials?.user });
-         
+        const checkCreatedBy = await this.companyRepository.findOne({
+            filter: {
+                $or: [
+                    { createdBy: createdBy },
+                    { hRs: createdBy },
+                ]
+            }
+        });
+
+
+        console.log(checkCreatedBy);
+
+        const isReceiverCompanyStaff = await this.companyRepository.findOne({
+    filter: {
+        $or: [
+            { createdBy: Types.ObjectId.createFromHexString(data.receiverId) },
+            { hRs: Types.ObjectId.createFromHexString(data.receiverId) },
+        ]
     }
-   
+        });
+        
+        console.log(isReceiverCompanyStaff);
+        
+        if (!checkCreatedBy && !isReceiverCompanyStaff) {
+            throw new BadRequestException("user not Company Owner or Company Hrs");
+        }
+
+        const user = await this.userRepository.findOne({
+                    filter: {
+                _id: Types.ObjectId.createFromHexString(data.receiverId),
+                    }
+                });
+        console.log(user);
+        
+                if (!user) {
+                    throw new NotFoundException("User not found");
+        }
+        
+
+        const chat = await this.chatRepository.findOneAndUpdate({
+            filter: {
+                $or: [
+                    { senderId: createdBy, receiverId: Types.ObjectId.createFromHexString(data.receiverId) },
+                    { senderId: Types.ObjectId.createFromHexString(data.receiverId), receiverId: createdBy }
+                ]
+                
+            },
+            update: {
+                senderId: createdBy,
+                receiverId: Types.ObjectId.createFromHexString(data.receiverId),
+                $addToSet: {
+                    messages: [{
+                        message: data.message,
+                        senderId: createdBy,
+                    }]
+                }
+               
+            }
+        });
+
+        console.log(chat);
+
+         if (!chat) {
+        
+            const newChat = await this.chatRepository.create({
+                data: [{
+                    createdBy,
+                    senderId: createdBy,
+                    receiverId: Types.ObjectId.createFromHexString(data.receiverId),
+                    messages: [{
+                        senderId: createdBy,
+                        message: data.message,
+                    }]
+                }]
+            });
+           
+            if (!newChat) {
+                throw new BadRequestException("Fail to create chat");
+             }
+             
+             console.log(newChat);
+             
+        }
+        console.log(connectedSockets.get(data.receiverId) as string[]);
+        
+        this.server.to(connectedSockets.get(createdBy.toString()) as string[]).emit("successMessage", { message: data.message });
+        
+        this.server.to(connectedSockets.get(data.receiverId) as string[]).emit("newMessage", { message: data.message, from: client.credentials.user });
+    }
 
 }

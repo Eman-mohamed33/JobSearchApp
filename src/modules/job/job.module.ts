@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import {
   ApplicationModel,
   ApplicationRepository,
@@ -9,19 +9,19 @@ import {
 } from "src/DB";
 import { JobController } from "./job.controller";
 import { JobService } from "./job.service";
-import { S3Service } from "src/common";
 import { RealTimeGateway } from "../gateway/gateway";
+import { RealTimeModule } from "../gateway/gateway.module";
+import { ChatModule } from "../chat/chat.module";
+
 
 @Module({
-  imports: [JobModel, ApplicationModel, CompanyModel],
+  imports: [JobModel, ApplicationModel, CompanyModel, ChatModule, forwardRef(() => RealTimeModule)],
   controllers: [JobController],
   providers: [
     JobRepository,
     ApplicationRepository,
     JobService,
     CompanyRepository,
-    S3Service,
-    RealTimeGateway,
   ],
   exports: [],
 })

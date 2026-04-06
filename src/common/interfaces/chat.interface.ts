@@ -1,5 +1,5 @@
-import { Types } from 'mongoose';
-import { IUser } from './user.interface';
+import { Types } from "mongoose";
+import { IUser } from "./user.interface";
 
 export interface IMessages {
   message: string;
@@ -7,7 +7,7 @@ export interface IMessages {
 }
 export interface IChat {
   _id?: Types.ObjectId;
-
+  createdBy: Types.ObjectId;
   senderId: Types.ObjectId | IUser;
   receiverId: Types.ObjectId | IUser;
 

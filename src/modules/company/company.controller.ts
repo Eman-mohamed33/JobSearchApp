@@ -73,13 +73,15 @@ export class CompanyController {
     }
 
 
+    @Auth([RoleEnum.Admin, RoleEnum.User])
     @UseInterceptors(
         FileInterceptor(
-            'picture',
+            'logo',
             CloudFileUpload({
                 validation: fileValidation.image,
+                 storageApproach: StorageEnum.Disk,
             })))
-    @Patch("upload-logo-picture")
+    @Patch(":companyId/upload-logo-picture")
     async uploadLogoPic(
         @User() user: UserDocument,
         @Param() param: CompanyParamDto,
@@ -90,33 +92,33 @@ export class CompanyController {
     }
 
 
-     @Patch(":companyId/delete-logo-picture")
-    async deleteLogoPic(
-        @User() user: UserDocument,
-        @Param() param: CompanyParamDto,
-    ): Promise<IResponse<CompanyResponse>> {
-        const company = await this.companyService.deleteLogoPic(user, param.companyId);
-        return successResponse<CompanyResponse>({ status: 200, data: { company } });
-    }
+    //  @Patch(":companyId/delete-logo-picture")
+    // async deleteLogoPic(
+    //     @User() user: UserDocument,
+    //     @Param() param: CompanyParamDto,
+    // ): Promise<IResponse<CompanyResponse>> {
+    //     const company = await this.companyService.deleteLogoPic(user, param.companyId);
+    //     return successResponse<CompanyResponse>({ status: 200, data: { company } });
+    // }
 
 
-    @UseInterceptors(
-        FilesInterceptor(
-            'coverPictures',
-            4,
-            CloudFileUpload({
-                validation: fileValidation.image,
-                storageApproach: StorageEnum.Disk,
-            })))
-    @Patch("upload-cover-pictures")
-    async uploadCoverPic(
-        @Param() param: CompanyParamDto,
-        @User() user: UserDocument,
-        @UploadedFiles(ParseFilePipe) files: Express.Multer.File[],
-    ): Promise<IResponse<CompanyResponse>> {
-        const company = await this.companyService.uploadCoverPic(user, param.companyId, files);
-        return successResponse<CompanyResponse>({ status: 200, data: { company } });
-    }
+    // @UseInterceptors(
+    //     FilesInterceptor(
+    //         'coverPictures',
+    //         4,
+    //         CloudFileUpload({
+    //             validation: fileValidation.image,
+    //             storageApproach: StorageEnum.Disk,
+    //         })))
+    // @Patch("upload-cover-pictures")
+    // async uploadCoverPic(
+    //     @Param() param: CompanyParamDto,
+    //     @User() user: UserDocument,
+    //     @UploadedFiles(ParseFilePipe) files: Express.Multer.File[],
+    // ): Promise<IResponse<CompanyResponse>> {
+    //     const company = await this.companyService.uploadCoverPic(user, param.companyId, files);
+    //     return successResponse<CompanyResponse>({ status: 200, data: { company } });
+    // }
 
 
     // @Patch(":companyId/delete-cover-pictures")

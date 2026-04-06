@@ -7,7 +7,7 @@ import { UserRepository } from "src/DB/repositories/user.repository";
 import { CompanyDocument, CompanyRepository } from "src/DB";
 import { OneCompanyResponse } from "../company/entities/company.entity";
 import { GraphQLError } from "graphql";
-import { UpdateQuery } from "mongoose";
+import { Types, UpdateQuery } from "mongoose";
 import { UserDocument } from "src/DB/models/user.model";
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
@@ -32,16 +32,17 @@ export class AdminResolver {
 
         const companies = await this.companyRepository.find({
             filter: {},
-            options: {
-                populate: [
-                    {
-                        path:"createdBy"
-                    },
-                    {
-                        path:"hRs"
-                    }
-                ]
-            }
+            // options: {
+            //     populate: [
+            //         {
+            //             path: "createdBy",
+            //             select:"firstName"
+            //         },
+            //         // {
+            //         //     path:"hRs"
+            //         // }
+            //     ]
+            // }
         })
 
         return { users, companies };
@@ -112,10 +113,11 @@ export class AdminResolver {
     async approveCompany(
         @Args("companyId") companyId: string,
     ): Promise<OneCompanyResponse> {
+
         const company = await this.companyRepository.findOneAndUpdate({
             filter: {
-                _id: companyId,
-                legalAttachment: { $exists: true },
+                _id: Types.ObjectId.createFromHexString(companyId),
+               // legalAttachment: { $exists: true },
             },
             update: {
                 approvedByAdmin: true,

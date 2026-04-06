@@ -1,6 +1,6 @@
 import { Field, ID, ObjectType, registerEnumType } from "@nestjs/graphql";
 import { Types } from "mongoose";
-import { type IPicture, IUser } from "src/common";
+import { ICompany, type IPicture, IUser } from "src/common";
 import { GenderEnum, ProviderEnum, RoleEnum } from "src/common/enums/user.enum";
 import { OneCompanyResponse } from "src/modules/company/entities/company.entity";
 
@@ -79,5 +79,6 @@ export class DisplayAllDataResponse {
   @Field(() => [OneUserResponse])
   users: IUser[];
   @Field(() => [OneCompanyResponse])
-  companies: [OneCompanyResponse];
+  //companies: [OneCompanyResponse];
+  companies: ICompany[];
 }

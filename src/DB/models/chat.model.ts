@@ -29,6 +29,8 @@ export class Chat implements IChat {
   receiverId: Types.ObjectId;
   @Prop([{ type: Messages, required: true }])
   messages: Messages[];
+  @Prop({ type: Types.ObjectId, ref: "User", required: true })
+  createdBy: Types.ObjectId;
 }
 
 export type ChatDocument = HydratedDocument<Chat>;

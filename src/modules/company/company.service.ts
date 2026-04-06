@@ -2,15 +2,16 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { ApplicationRepository, CompanyDocument, CompanyRepository, lean } from "src/DB";
 import { UserDocument } from "src/DB/models/user.model";
 import { AddCompanyBodyDto, SearchQueryDto, UpdateCompanyBodyDto } from "./dto/company.dto";
-import { S3Service, StorageEnum } from "src/common";
+import { StorageEnum } from "src/common";
 import { Types } from "mongoose";
 import { RoleEnum } from "src/common/enums/user.enum";
+import { CloudinaryService } from "src/common/services/cloudinary.service";
 
 @Injectable()
 export class CompanyService {
     constructor(
         private readonly companyRepository: CompanyRepository,
-        private readonly s3Service: S3Service,
+        private readonly cloudinaryService: CloudinaryService,
         //private readonly applicationRepository:ApplicationRepository
     ) { }
     
@@ -148,6 +149,8 @@ export class CompanyService {
     }
 
     async uploadLogoPic(user: UserDocument, companyId: Types.ObjectId, file: Express.Multer.File): Promise<CompanyDocument | lean<CompanyDocument>> {
+       
+companyId=new Types.ObjectId(companyId);
         const company = await this.companyRepository.findOne({
             filter: {
                 _id: companyId,
@@ -159,116 +162,115 @@ export class CompanyService {
             throw new NotFoundException("This company not exist");
         }
         
-        company.logo.secure_url = await this.s3Service.uploadFile({
-            storageApproach: StorageEnum.Disk,
-            path: `company/${company._id.toString()}/logo`,
-            file
-        });
+        company.logo = await this.cloudinaryService.uploadFile({
+            file: file.path,
+            path: `company/${companyId.toString()}/logo`,
+        })
 
         await company.save();
         return company;
     }
 
-    async uploadCoverPic(user: UserDocument, companyId: Types.ObjectId, files: Express.Multer.File[]):
-        Promise<CompanyDocument | lean<CompanyDocument>> {
+    // async uploadCoverPic(user: UserDocument, companyId: Types.ObjectId, files: Express.Multer.File[]):
+    //     Promise<CompanyDocument | lean<CompanyDocument>> {
       
-        const company = await this.companyRepository.findOne({
-            filter: {
-                _id: companyId,
-                createdBy: user._id,
-            }
-        });
+    //     const company = await this.companyRepository.findOne({
+    //         filter: {
+    //             _id: companyId,
+    //             createdBy: user._id,
+    //         }
+    //     });
 
-        if (!company) {
-            throw new NotFoundException("This company not exist");
-        };
-        const oldCoverPics = company.coverPic.map(url => url.secure_url);
-        const coverPictures = await this.s3Service.uploadFilesOrLargeFiles({
-            storageApproach: StorageEnum.Disk,
-            path: `company/${companyId.toString()}/cover`,
-            files,
-        });
+    //     if (!company) {
+    //         throw new NotFoundException("This company not exist");
+    //     };
+    //     const oldCoverPics = company.coverPic.map(url => url.secure_url);
+    //     const coverPictures = await this.s3Service.uploadFilesOrLargeFiles({
+    //         storageApproach: StorageEnum.Disk,
+    //         path: `company/${companyId.toString()}/cover`,
+    //         files,
+    //     });
 
-        company.coverPic = coverPictures.map(url => ({
-            secure_url: url,
-            public_id: url,
-        }));
+    //     company.coverPic = coverPictures.map(url => ({
+    //         secure_url: url,
+    //         public_id: url,
+    //     }));
   
 
-        if (oldCoverPics.length) {
-            await this.s3Service.deleteFiles({
-                urls: oldCoverPics
-            });
-        }
+    //     if (oldCoverPics.length) {
+    //         await this.s3Service.deleteFiles({
+    //             urls: oldCoverPics
+    //         });
+    //     }
 
-        await company.save();
-        return company;
-    }
+    //     await company.save();
+    //     return company;
+    // }
     
 
-    async deleteLogoPic(user: UserDocument, companyId: Types.ObjectId) {
-        const company = await this.companyRepository.findOne({
-            filter: {
-                _id: companyId,
-                createdBy: user._id,
-            }
-        });
+    // async deleteLogoPic(user: UserDocument, companyId: Types.ObjectId) {
+    //     const company = await this.companyRepository.findOne({
+    //         filter: {
+    //             _id: companyId,
+    //             createdBy: user._id,
+    //         }
+    //     });
 
-        if (!company) {
-            throw new NotFoundException("This company not exist");
-        }
+    //     if (!company) {
+    //         throw new NotFoundException("This company not exist");
+    //     }
         
-        await this.s3Service.deleteFile({
-            Key: company.logo.secure_url
-        });
+    //     await this.s3Service.deleteFile({
+    //         Key: company.logo.secure_url
+    //     });
 
-        const updateCompany = await this.companyRepository.updateOne({
-            filter: {
-                _id: companyId,
-            },
-            update: {
-                $set: { logo: null },
-            }
-        });
+    //     const updateCompany = await this.companyRepository.updateOne({
+    //         filter: {
+    //             _id: companyId,
+    //         },
+    //         update: {
+    //             $set: { logo: null },
+    //         }
+    //     });
 
-        if (!updateCompany.matchedCount) {
-            throw new BadRequestException("Fail to delete logo company");
-        }
-        return company;
-    }
+    //     if (!updateCompany.matchedCount) {
+    //         throw new BadRequestException("Fail to delete logo company");
+    //     }
+    //     return company;
+    // }
 
-    async deleteCoverPic(user: UserDocument, companyId: Types.ObjectId) {
-        const company = await this.companyRepository.findOne({
-            filter: {
-                _id: companyId,
-                createdBy: user._id,
-            }
-        });
+    // async deleteCoverPic(user: UserDocument, companyId: Types.ObjectId) {
+    //     const company = await this.companyRepository.findOne({
+    //         filter: {
+    //             _id: companyId,
+    //             createdBy: user._id,
+    //         }
+    //     });
 
-        if (!company) {
-            throw new NotFoundException("This company not exist");
-        }
-        const oldCoverPics = company.coverPic.map(url => url.secure_url);
+    //     if (!company) {
+    //         throw new NotFoundException("This company not exist");
+    //     }
+    //     const oldCoverPics = company.coverPic.map(url => url.secure_url);
 
-        await this.s3Service.deleteFiles({
-            urls: oldCoverPics,
-        });
+    //     await this.s3Service.deleteFiles({
+    //         urls: oldCoverPics,
+    //     });
 
-        const updateCompany = await this.companyRepository.updateOne({
-            filter: {
-                _id: companyId,
-            },
-            update: {
-                $set: { coverPic: null },
-            }
-        });
+    //     const updateCompany = await this.companyRepository.updateOne({
+    //         filter: {
+    //             _id: companyId,
+    //         },
+    //         update: {
+    //             $set: { coverPic: null },
+    //         }
+    //     });
 
-        if (!updateCompany.matchedCount) {
-            throw new BadRequestException("Fail to delete cover pictures");
-        }
+    //     if (!updateCompany.matchedCount) {
+    //         throw new BadRequestException("Fail to delete cover pictures");
+    //     }
 
-        return "Cover Pictures deleted successfully";
-    }
+    //     return "Cover Pictures deleted successfully";
+    // }
 
    
 }

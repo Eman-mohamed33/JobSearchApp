@@ -8,7 +8,6 @@ import { AppService } from "./app.service";
 import { SharedAuthenticationModule } from "./common/modules/authentication.module";
 import { AuthenticationModule } from "./modules/authentication/auth.module";
 import { UserModule } from "./modules/user/user.module";
-import { S3Service } from "./common";
 import { CompanyModule } from "./modules/company/company.module";
 import { GraphQLModule } from "@nestjs/graphql";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
@@ -47,6 +46,6 @@ import { ChatModule } from "./modules/chat/chat.module";
     ChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService, S3Service],
+  providers: [AppService],
 })
 export class AppModule {}

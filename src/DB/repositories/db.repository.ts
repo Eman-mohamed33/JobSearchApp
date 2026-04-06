@@ -1,9 +1,11 @@
 import {
+    AggregateOptions,
   CreateOptions,
    DeleteResult,
     FlattenMaps,
     HydratedDocument,
     MongooseUpdateQueryOptions,
+    PipelineStage,
     PopulateOptions,
     ProjectionType,
     QueryOptions,
@@ -277,5 +279,16 @@ export abstract class DatabaseRepository<
             limit: options.limit,
             result,
         };
+    }
+
+    async aggregate({
+        pipeline,
+        options
+    }:
+        {
+            pipeline?: PipelineStage[] | undefined,
+            options?: AggregateOptions
+        }):Promise<any[]> {
+        return await this.model.aggregate(pipeline, options);
     }
 }

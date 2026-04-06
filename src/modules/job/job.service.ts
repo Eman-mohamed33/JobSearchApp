@@ -3,7 +3,7 @@ import { ApplicationDocument, ApplicationRepository, CompanyRepository, JobDocum
 import { CreateJobBodyDto, GetAllDto, JobParamDto, UpdateJobBodyDto } from "./dto/job.dto";
 import { UserDocument } from "src/DB/models/user.model";
 import { Types } from "mongoose";
-import { S3Service, StatusEnum } from "src/common";
+import { StatusEnum } from "src/common";
 import { emailEvent } from "src/common/utils/events/email.event";
 import { UserRepository } from "src/DB/repositories/user.repository";
 import { RealTimeGateway } from "../gateway/gateway";
@@ -16,7 +16,6 @@ export class JobService {
         private readonly jobRepository: JobRepository,
         private readonly applicationRepository: ApplicationRepository,
         private readonly companyRepository: CompanyRepository,
-        private readonly s3Service: S3Service,
         private readonly userRepository: UserRepository,
         private readonly realTimeGateway: RealTimeGateway,
     ) { }

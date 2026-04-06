@@ -1,17 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { compareHash, generateEncryption, generateHash, S3Service, StorageEnum } from "src/common";
+import { compareHash, generateEncryption, generateHash, StorageEnum } from "src/common";
 import { lean } from "src/DB";
 import { type UserDocument } from "src/DB/models/user.model";
 import { UserRepository } from "src/DB/repositories/user.repository";
 import { UpdateAccountBodyDto, UpdatePasswordBodyDto } from "./dto/user.dto";
 import { Types } from "mongoose";
 import { RoleEnum } from "src/common/enums/user.enum";
+import { CloudinaryService } from "src/common/services/cloudinary.service";
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly s3Service: S3Service,
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
   
   async updateAccount(user: UserDocument, body: UpdateAccountBodyDto): Promise<UserDocument | lean<UserDocument>> {
@@ -107,89 +108,84 @@ export class UserService {
   }
 
   async uploadProfilePic(user: UserDocument, file: Express.Multer.File): Promise<UserDocument> {
-    user.profilePic.secure_url = await this.s3Service.uploadFile({
-      storageApproach: StorageEnum.Disk,
-      path: `user/${user._id.toString()}/profilePicture`,
-      file
+    user.profilePic = await this.cloudinaryService.uploadFile({
+      path: `user/${user._id.toString()}/profilePic`,
+      file: file.path,
     });
 
     await user.save();
     return user;
   }
 
-  async uploadCoverPic(user: UserDocument, files: Express.Multer.File[]): Promise<UserDocument> {
+  // async uploadCoverPic(user: UserDocument, files: Express.Multer.File[]): Promise<UserDocument> {
 
-    const oldCoverPics = user.coverPic.map(url => url.secure_url);
-    const coverPics = await this.s3Service.uploadFilesOrLargeFiles({
-      storageApproach: StorageEnum.Disk,
-      path: `users/${user.__v.toString()}/coverPic`,
-      files
-    });
+  //   const oldCoverPics = user.coverPic.map(url => url.secure_url);
+  //   const coverPics = await this.cloudinaryService.uploadFiles({
+  //     files: files.map(file => file.path),
+  //     path:`user/${user._id.toString()}/coverPics`
+  //   })
 
   
-    user.coverPic = coverPics.map(url => ({
-      secure_url: url,
-      public_id: url,
-    }));
+   
   
-    await user.save();
-    if (!user) {
-      throw new BadRequestException("Fail to upload profile cover Images");
-    }
+  //   await user.save();
+  //   if (!user) {
+  //     throw new BadRequestException("Fail to upload profile cover Images");
+  //   }
 
-    if (oldCoverPics.length) {
-      await this.s3Service.deleteFiles({
-        urls: oldCoverPics
-      });
-    }
+  //   if (oldCoverPics.length) {
+  //     await this.cloudinaryService.deleteResources({
+  //       public_ids: oldCoverPics
+  //     });
+  //   }
 
 
-    return user;
-  }
+  //   return user;
+  // }
 
-  async deleteProfilePic(user: UserDocument):
-    Promise<UserDocument | lean<UserDocument>> {
-    await this.s3Service.deleteFile({
-      Key: user.profilePic.secure_url,
-    });
+  // async deleteProfilePic(user: UserDocument):
+  //   Promise<UserDocument | lean<UserDocument>> {
+  //   await this.s3Service.deleteFile({
+  //     Key: user.profilePic.secure_url,
+  //   });
 
-    const updateUser = await this.userRepository.updateOne({
-      filter: {
-        _id: user._id,
-      },
-      update: {
-        $set: { profilePic: null },
-      }
-    });
+  //   const updateUser = await this.userRepository.updateOne({
+  //     filter: {
+  //       _id: user._id,
+  //     },
+  //     update: {
+  //       $set: { profilePic: null },
+  //     }
+  //   });
 
-    if (!updateUser.matchedCount) {
-      throw new BadRequestException("Fail to delete profile picture");
-    }
-    return user;
-  }
+  //   if (!updateUser.matchedCount) {
+  //     throw new BadRequestException("Fail to delete profile picture");
+  //   }
+  //   return user;
+  // }
 
-  async deleteCoverPic(user: UserDocument):
-    Promise<UserDocument | lean<UserDocument>> {
-    const oldCoverPics = user.coverPic.map(url => url.secure_url);
+  // async deleteCoverPic(user: UserDocument):
+  //   Promise<UserDocument | lean<UserDocument>> {
+  //   const oldCoverPics = user.coverPic.map(url => url.secure_url);
 
-    await this.s3Service.deleteFiles({
-      urls: oldCoverPics,
-    });
+  //   await this.s3Service.deleteFiles({
+  //     urls: oldCoverPics,
+  //   });
 
-    const updateUser = await this.userRepository.updateOne({
-      filter: {
-        _id: user._id,
-      },
-      update: {
-        $set: { coverPic: null },
-      }
-    });
+  //   const updateUser = await this.userRepository.updateOne({
+  //     filter: {
+  //       _id: user._id,
+  //     },
+  //     update: {
+  //       $set: { coverPic: null },
+  //     }
+  //   });
 
-    if (!updateUser.matchedCount) {
-      throw new BadRequestException("Fail to delete profile picture");
-    }
-    return user;
-  }
+  //   if (!updateUser.matchedCount) {
+  //     throw new BadRequestException("Fail to delete profile picture");
+  //   }
+  //   return user;
+  // }
 
   async softDeleteAccount(user: UserDocument, userId: Types.ObjectId): Promise<string> {
     if (user.role !== RoleEnum.Admin && user._id.toString() !== userId.toString()) {
