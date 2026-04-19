@@ -18,7 +18,7 @@ export class AuthenticationController {
     @Body() body: SignupBodyDto,
   ): Promise<IResponse> {
     await this.authenticationService.signup(body);
-    return successResponse({ message: "Done", status: 201 });
+    return successResponse({ message: "Account created successfully.", status: 201 });
   }
 
   @Post("login")
@@ -26,7 +26,7 @@ export class AuthenticationController {
     @Body() body: LoginBodyDto,
   ): Promise<IResponse<loginCredentials>> {
     const credentials = await this.authenticationService.login(body);
-    return successResponse<loginCredentials>({ message: "Done", data: credentials, status: 201 });
+    return successResponse<loginCredentials>({ message: "Logged in successfully.", data: credentials, status: 201 });
   }
 
 
@@ -35,7 +35,7 @@ export class AuthenticationController {
     @Body() body: VerifyGmail,
   ): Promise<IResponse> {
     await this.authenticationService.signupWithGmail(body);
-    return successResponse({ message: "Done", status: 201 });
+    return successResponse({ message: "Account created successfully with Google.", status: 201 });
   }
 
   @Post("login-with-gmail")
@@ -43,7 +43,7 @@ export class AuthenticationController {
     @Body() body: VerifyGmail,
   ): Promise<IResponse<loginCredentials>> {
     const credentials = await this.authenticationService.loginWithGmail(body);
-    return successResponse<loginCredentials>({ message: "Done", data: credentials, status: 201 });
+    return successResponse<loginCredentials>({ message: "Logged in successfully with Google.", data: credentials, status: 201 });
   }
 
   @Patch("confirm-email")
@@ -51,7 +51,7 @@ export class AuthenticationController {
     @Body() body: ConfirmEmailBodyDto,
   ): Promise<IResponse> {
     await this.authenticationService.confirmEmail(body);
-    return successResponse({ message: "Done", status: 200 });
+    return successResponse({ message: "Email confirmed successfully.", status: 200 });
   }
 
   @Patch("resend-confirm-email-otp")
@@ -59,7 +59,7 @@ export class AuthenticationController {
     @Body() body: ResendConfirmEmailOtp,
   ): Promise<IResponse> {
     await this.authenticationService.resendConfirmEmailOtp(body);
-    return successResponse({ message: "Done", status: 200 });
+    return successResponse({ message: "OTP has been sent successfully to your email.", status: 200 });
   }
 
   @Patch("forgot-password")
@@ -67,7 +67,7 @@ export class AuthenticationController {
     @Body() body: ResendConfirmEmailOtp,
   ): Promise<IResponse> {
     await this.authenticationService.forgotPassword(body);
-    return successResponse({ message: "Done", status: 200 });
+    return successResponse({ message: "OTP has been sent successfully to your email.", status: 200 });
   }
 
 
@@ -76,7 +76,7 @@ export class AuthenticationController {
     @Body() body: ResetPasswordBodyDto,
   ): Promise<IResponse> {
     await this.authenticationService.resetPassword(body);
-    return successResponse({ message: "Done", status: 200 });
+    return successResponse({ message: "Password has been reset successfully.", status: 200 });
   }
 
 

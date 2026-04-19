@@ -21,7 +21,7 @@ import { ChatModule } from "./modules/chat/chat.module";
       throttlers: [
         {
           ttl: 60 * 60000,
-          limit: 2000,
+          limit: 10,
         },
       ],
     }),

@@ -9,11 +9,9 @@ import {
 } from "src/DB";
 import { JobController } from "./job.controller";
 import { JobService } from "./job.service";
-import { RealTimeGateway } from "../gateway/gateway";
 import { RealTimeModule } from "../gateway/gateway.module";
 import { ChatModule } from "../chat/chat.module";
-
-
+import { CloudinaryService } from "src/common/services/cloudinary.service";
 @Module({
   imports: [JobModel, ApplicationModel, CompanyModel, ChatModule, forwardRef(() => RealTimeModule)],
   controllers: [JobController],
@@ -22,6 +20,7 @@ import { ChatModule } from "../chat/chat.module";
     ApplicationRepository,
     JobService,
     CompanyRepository,
+    CloudinaryService,
   ],
   exports: [],
 })

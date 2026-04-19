@@ -12,8 +12,8 @@ type OneCompanyResponse {
   address: String!
   numberOfEmployees: Float!
   companyEmail: String!
-  logo: PictureGraphQl!
-  coverPic: [PictureGraphQl!]!
+  logo: PictureGraphQl
+  coverPic: [PictureGraphQl!]
   legalAttachment: PictureGraphQl!
   approvedByAdmin: Boolean!
   deletedAt: DateTime
@@ -48,8 +48,8 @@ type OneUserResponse {
   createdAt: DateTime
   updatedAt: DateTime
   changeCredentialTime: DateTime
-  profilePic: PictureGraphQl!
-  coverPic: [PictureGraphQl!]!
+  profilePic: PictureGraphQl
+  coverPic: [PictureGraphQl!]
   role: RoleEnum!
   provider: ProviderEnum!
   gender: GenderEnum!

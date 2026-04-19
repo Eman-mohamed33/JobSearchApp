@@ -9,26 +9,26 @@ import { type UserDocument } from "src/DB/models/user.model";
 import { Auth } from "src/common/decorators/auth.decorator";
 import { RoleEnum } from "src/common/enums/user.enum";
 
-@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }))
 @Controller("company")
 export class CompanyController {
     constructor(private readonly companyService: CompanyService) { }
     
-    // @UseInterceptors(
-    //     FileInterceptor(
-    //         'document',
-    //         CloudFileUpload({
-    //             storageApproach: StorageEnum.Disk,
-    //             validation: fileValidation.document || fileValidation.image,
-    //         })))
+    @UseInterceptors(
+        FileInterceptor(
+            'document',
+            CloudFileUpload({
+                storageApproach: StorageEnum.Disk,
+                validation: fileValidation.document || fileValidation.image,
+            })))
     @Auth([RoleEnum.Admin, RoleEnum.User])
     @Post("/")
     async addCompany(
         @Body() body: AddCompanyBodyDto,
         @User() user: UserDocument,
-       // @UploadedFile(ParseFilePipe) file: Express.Multer.File,
+        @UploadedFile(ParseFilePipe) file: Express.Multer.File,
     ): Promise<IResponse<CompanyResponse>>{
-        const company = await this.companyService.addCompany(body, user);
+        const company = await this.companyService.addCompany(body, user, file);
         return successResponse<CompanyResponse>({ status: 201, data: { company } });
     }
 
@@ -91,42 +91,44 @@ export class CompanyController {
         return successResponse<CompanyResponse>({ status: 200, data: { company } });
     }
 
-
-    //  @Patch(":companyId/delete-logo-picture")
-    // async deleteLogoPic(
-    //     @User() user: UserDocument,
-    //     @Param() param: CompanyParamDto,
-    // ): Promise<IResponse<CompanyResponse>> {
-    //     const company = await this.companyService.deleteLogoPic(user, param.companyId);
-    //     return successResponse<CompanyResponse>({ status: 200, data: { company } });
-    // }
-
-
-    // @UseInterceptors(
-    //     FilesInterceptor(
-    //         'coverPictures',
-    //         4,
-    //         CloudFileUpload({
-    //             validation: fileValidation.image,
-    //             storageApproach: StorageEnum.Disk,
-    //         })))
-    // @Patch("upload-cover-pictures")
-    // async uploadCoverPic(
-    //     @Param() param: CompanyParamDto,
-    //     @User() user: UserDocument,
-    //     @UploadedFiles(ParseFilePipe) files: Express.Multer.File[],
-    // ): Promise<IResponse<CompanyResponse>> {
-    //     const company = await this.companyService.uploadCoverPic(user, param.companyId, files);
-    //     return successResponse<CompanyResponse>({ status: 200, data: { company } });
-    // }
+    @Auth([RoleEnum.Admin, RoleEnum.User])
+    @Patch(":companyId/delete-logo-picture")
+    async deleteLogoPic(
+        @User() user: UserDocument,
+        @Param() param: CompanyParamDto,
+    ): Promise<IResponse<CompanyResponse>> {
+        const company = await this.companyService.deleteLogoPic(user, param.companyId);
+        return successResponse<CompanyResponse>({ status: 200, data: { company } });
+    }
 
 
-    // @Patch(":companyId/delete-cover-pictures")
-    // async deleteCoverPic(
-    //     @User() user: UserDocument,
-    //     @Param() param: CompanyParamDto,
-    // ): Promise<IResponse<CompanyResponse>> {
-    //     const company = await this.companyService.deleteCoverPic(user, param.companyId);
-    //     return successResponse<CompanyResponse>({ status: 200, data: { company } });
-    // }
+    @Auth([RoleEnum.Admin, RoleEnum.User])
+    @UseInterceptors(
+        FilesInterceptor(
+            'coverPictures',
+            4,
+            CloudFileUpload({
+                validation: fileValidation.image,
+                storageApproach: StorageEnum.Disk,
+            })))
+    @Patch(":companyId/upload-cover-pictures")
+    async uploadCoverPic(
+        @Param() param: CompanyParamDto,
+        @User() user: UserDocument,
+        @UploadedFiles(ParseFilePipe) files: Express.Multer.File[],
+    ): Promise<IResponse<CompanyResponse>> {
+        const company = await this.companyService.uploadCoverPic(user, param.companyId, files);
+        return successResponse<CompanyResponse>({ status: 200, data: { company } });
+    }
+
+
+    @Auth([RoleEnum.Admin, RoleEnum.User])
+    @Patch(":companyId/delete-cover-pictures")
+    async deleteCoverPic(
+        @User() user: UserDocument,
+        @Param() param: CompanyParamDto,
+    ): Promise<IResponse<CompanyResponse>> {
+        const company = await this.companyService.deleteCoverPic(user, param.companyId);
+        return successResponse<CompanyResponse>({ status: 200, data: { company } });
+    }
 }

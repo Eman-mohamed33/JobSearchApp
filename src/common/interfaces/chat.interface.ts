@@ -1,6 +1,19 @@
 import { Types } from "mongoose";
 import { IUser } from "./user.interface";
+import { ISocketAuth } from "../utils";
+import { Server } from "socket.io";
 
+export interface IChatHistory {
+  message: string;
+  senderId: Types.ObjectId;
+  _id: Types.ObjectId;
+}
+export interface ISendMessage {
+  socket: ISocketAuth;
+  io: Server;
+  receiverId: string;
+  message: string;
+}
 export interface IMessages {
   message: string;
   senderId: Types.ObjectId;

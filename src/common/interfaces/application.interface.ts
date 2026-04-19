@@ -13,4 +13,5 @@ export interface IApplication {
 
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date;
 }

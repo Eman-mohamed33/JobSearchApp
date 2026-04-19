@@ -91,7 +91,6 @@ export class TokenService {
   createLoginCredentials = async (user: UserDocument):Promise<LoginCredentialsResponse> => {
       const signatureLevel = await this.detectSignatureLevel(user.role);
     const signatures = await this.getSignatures(signatureLevel);
-      console.log({ signatures });
       const jwtId = randomUUID();
       const access_token = await this.generateToken({
           payLoad: { sub: user?._id },
@@ -164,9 +163,9 @@ export class TokenService {
        throw new BadRequestException('User not Registered');
      }
 
-    //  if (user.changeCredentialTime?.getTime() || 0 > decoded.iat * 1000) {
-    //    throw new UnauthorizedException('Invalid or Old Login Credentials1');
-    //  }
+     if ((user.changeCredentialTime?.getTime() || 0) > decoded.iat * 1000) {
+       throw new UnauthorizedException('Invalid or Old Login Credentials1');
+     }
 
      return { user, decoded };
    } catch (error) {

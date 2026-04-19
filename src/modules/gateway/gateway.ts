@@ -1,12 +1,12 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Types } from "mongoose";
 import { Server, Socket } from "socket.io";
-import { getSocketAuth, User, type ISocketAuth } from "src/common";
+import { getSocketAuth, type ISocketAuth } from "src/common";
 import { Auth } from "src/common/decorators/auth.decorator";
 import { TokenEnum } from "src/common/enums/token.enum";
 import { RoleEnum } from "src/common/enums/user.enum";
 import { TokenService } from "src/common/services/token.service";
-import { connectedSockets, type UserDocument } from "src/DB/models/user.model";
+import { connectedSockets } from "src/DB/models/user.model";
 import { ChatService } from "../chat/chat.service";
 import { ChatRepository, CompanyRepository } from "src/DB";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
@@ -26,67 +26,27 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
         private readonly tokenService: TokenService,
                private readonly userRepository: UserRepository,
     ) { }
-    afterInit(server: Server) {
+    afterInit() {
         console.log("RealTime gateway Started ✨");
-        server.on("connection", (socket: Socket) => {
-            console.log(socket.id);
-            //this.sendMessage(socket as ISocketAuth, server);
-            
-
-        });
     }
 
     async handleConnection(client: ISocketAuth) {
-      try{
-         const authorization = getSocketAuth(client);
-
-        console.log({authorization});
-        const { user, decoded } = await this.tokenService.decodeToken({ authorization, tokenType: TokenEnum.Access });
-            console.log("User,decode",{ user, decoded });
+        try {
+            const authorization = getSocketAuth(client);
+            const { user, decoded } = await this.tokenService.decodeToken({ authorization, tokenType: TokenEnum.Access });
             const userTabs = connectedSockets.get(user._id.toString()) || [];
             userTabs.push(client.id);
             connectedSockets.set(user._id.toString(), userTabs);
-           client.credentials = { user, decoded };
-          console.log("User Connected:", client.id);
+            client.credentials = { user, decoded };
             const userId = user?._id?.toString();
-        if (userId) {
-        client.join(userId.toString()); // هنا بنعمل الأوضة برقم الـ ID
-        console.log(`User ${userId} joined their private room`);
-        }
-            //this.j();
-            console.log({ userTabs, connectedSockets });
-         
-          
-          // client.join(`user_${user._id.toString() as string}`);
-      } catch (error) {
-           client.emit("exception", error.message || "something went wrong");
+            if (userId) {
+                client.join(userId.toString());
             }
-          console.log('Client connected:', client.id);
+        } catch (error) {
+            client.emit("exception", error.message || "something went wrong");
+        }
+         
     }
-
-
-    // @Auth([RoleEnum.User, RoleEnum.Admin])
-    // @SubscribeMessage("sendMessage")
-    // async handleSendMessage(
-    //      @ConnectedSocket() client: ISocketAuth,
-    //     @MessageBody() data: { message: string, receiverId: string },
-    //   //  @User() user: UserDocument
-    // ) {
-    //   try {
-    //      console.log("Check chatService:", !!this.chatService);
-    //     console.log("Data received:", data);
-    //    await this.chatService.sendMessagesBetweenHrAndUser({ 
-    //         ...data, 
-    //         socket: client, 
-    //         io: this.server 
-    //    });
-    //     return { status: "success" };
-    //   } catch (error:any) {
-    //     console.error("Error in sendMessage Gateway:", error);
-    //     client.emit("exception", error.message || "Failed to send message");
-    //   }
-    // }
-
     
     handleDisconnect(client: Socket) {
         // const userId = client.credentials?.user._id?.toString() as string;
@@ -128,16 +88,9 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
 
     @Auth([RoleEnum.User, RoleEnum.Admin])
     @SubscribeMessage("sendMessage")
-    async test(@ConnectedSocket() client: ISocketAuth,
-        @MessageBody() data: { message: string, receiverId: string })  {
-        console.log("Test event received from client:", client.id);
-        console.log("Received Data :",data);
-        //console.log("Connected Sockets:", connectedSockets);
-        
+    async sendMessagesBetweenHrAndUser(@ConnectedSocket() client: ISocketAuth,
+        @MessageBody() data: { message: string, receiverId: string }) {
         const createdBy = client.credentials.user._id;
-        console.log("CreatedBY :", createdBy);
-        console.log("CreatedBY :", typeof createdBy);
-
         const checkCreatedBy = await this.companyRepository.findOne({
             filter: {
                 $or: [
@@ -147,33 +100,28 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
             }
         });
 
-
-        console.log(checkCreatedBy);
-
         const isReceiverCompanyStaff = await this.companyRepository.findOne({
-    filter: {
-        $or: [
-            { createdBy: Types.ObjectId.createFromHexString(data.receiverId) },
-            { hRs: Types.ObjectId.createFromHexString(data.receiverId) },
-        ]
-    }
+            filter: {
+                $or: [
+                    { createdBy: Types.ObjectId.createFromHexString(data.receiverId) },
+                    { hRs: Types.ObjectId.createFromHexString(data.receiverId) },
+                ]
+            }
         });
         
-        console.log(isReceiverCompanyStaff);
         
         if (!checkCreatedBy && !isReceiverCompanyStaff) {
             throw new BadRequestException("user not Company Owner or Company Hrs");
         }
 
         const user = await this.userRepository.findOne({
-                    filter: {
+            filter: {
                 _id: Types.ObjectId.createFromHexString(data.receiverId),
-                    }
-                });
-        console.log(user);
+            }
+        });
         
-                if (!user) {
-                    throw new NotFoundException("User not found");
+        if (!user) {
+            throw new NotFoundException("User not found");
         }
         
 
@@ -198,9 +146,8 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
             }
         });
 
-        console.log(chat);
 
-         if (!chat) {
+        if (!chat) {
         
             const newChat = await this.chatRepository.create({
                 data: [{
@@ -216,12 +163,9 @@ export class RealTimeGateway implements OnGatewayInit , OnGatewayConnection, OnG
            
             if (!newChat) {
                 throw new BadRequestException("Fail to create chat");
-             }
-             
-             console.log(newChat);
+            }
              
         }
-        console.log(connectedSockets.get(data.receiverId) as string[]);
         
         this.server.to(connectedSockets.get(createdBy.toString()) as string[]).emit("successMessage", { message: data.message });
         

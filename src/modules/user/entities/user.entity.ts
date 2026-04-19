@@ -60,9 +60,9 @@ export class OneUserResponse implements IUser {
   @Field(() => Date, { nullable: true })
   changeCredentialTime?: Date;
 
-  @Field(() => PictureGraphQl)
+  @Field(() => PictureGraphQl, { nullable: true })
   profilePic: PictureGraphQl;
-  @Field(() => [PictureGraphQl])
+  @Field(() => [PictureGraphQl], { nullable: true })
   coverPic: PictureGraphQl[];
 
   @Field(() => RoleEnum)
@@ -79,6 +79,5 @@ export class DisplayAllDataResponse {
   @Field(() => [OneUserResponse])
   users: IUser[];
   @Field(() => [OneCompanyResponse])
-  //companies: [OneCompanyResponse];
   companies: ICompany[];
 }

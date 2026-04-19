@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Res, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Get, Param, ParseFilePipe, Patch, Post, Query, Res, UploadedFile, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { JobService } from "./job.service";
 import { Auth } from "src/common/decorators/auth.decorator";
-import { IApplication, IJob, IResponse, StatusEnum, successResponse, User } from "src/common";
+import { IApplication, IJob, IResponse, StatusEnum, StorageEnum, successResponse, User } from "src/common";
 import { type UserDocument } from "src/DB/models/user.model";
 import { CreateJobBodyDto, GetAllDto, JobParamDto, UpdateJobBodyDto } from "./dto/job.dto";
 import { ApplicationResponse, JobResponse } from "./entities/job.entity";
@@ -9,6 +9,8 @@ import { RoleEnum } from "src/common/enums/user.enum";
 import { CompanyParamDto } from "../company/dto/company.dto";
 import { GetAllResponse } from "src/common/entities/response.entity";
 import { type Response } from "express";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { CloudFileUpload, fileValidation } from "src/common/utils/multer";
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller("company/:companyId/job")
@@ -101,12 +103,19 @@ export class JobController {
     }
 
     @Auth([RoleEnum.User])
+    @UseInterceptors(FileInterceptor(
+        'cv',
+        CloudFileUpload({
+            validation: fileValidation.document,
+            storageApproach: StorageEnum.Disk,
+        })))
     @Post(":jobId/apply")
     async applyToJob(
         @User() user: UserDocument,
-        @Param() param:JobParamDto,
+        @Param() param: JobParamDto,
+        @UploadedFile(ParseFilePipe) file: Express.Multer.File,
     ): Promise<IResponse<ApplicationResponse>> {
-        const application = await this.jobService.applyToJob(user, param.jobId, param.companyId);
+        const application = await this.jobService.applyToJob(user, param.jobId, param.companyId, file);
         return successResponse<ApplicationResponse>({ status: 201, data: { application } });
     }
 

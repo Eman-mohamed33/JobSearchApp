@@ -75,41 +75,42 @@ export class UserController {
   
 
   
-  // @Auth([RoleEnum.Admin, RoleEnum.User])
-  // @UseInterceptors(
-  //   FilesInterceptor(
-  //     'coverPictures',
-  //     4,
-  //     CloudFileUpload({
-  //       validation: fileValidation.image,
-  //       storageApproach: StorageEnum.Disk,
-  //     })))
-  // @Patch("cover-pictures")
-  // async uploadCoverPic(
-  //   @User() user: UserDocument,
-  //   @UploadedFiles(ParseFilePipe) files: Express.Multer.File[],
-  // ): Promise<IResponse<UserResponse>> {
-  //   const User = await this.userService.uploadCoverPic(user, files);
-  //   return successResponse<UserResponse>({ data: { User }, status: 200 })
-  // }
+  @Auth([RoleEnum.Admin, RoleEnum.User])
+  @UseInterceptors(
+    FilesInterceptor(
+      'coverPictures',
+      4,
+      CloudFileUpload({
+        validation: fileValidation.image,
+        storageApproach: StorageEnum.Disk,
+      })))
+  @Patch("cover-pictures")
+  async uploadCoverPic(
+    @User() user: UserDocument,
+    @UploadedFiles(ParseFilePipe) files: Express.Multer.File[],
+  ): Promise<IResponse<UserResponse>> {
+    const User = await this.userService.uploadCoverPic(user, files);
+    return successResponse<UserResponse>({ data: { User }, status: 200 })
+  }
 
 
-  // @Patch("delete-profile-picture")
-  // async deleteProfilePic(
-  //   @User() user: UserDocument,
-  // ): Promise<IResponse<UserResponse>> {
-  //   const User = await this.userService.deleteProfilePic(user);
-  //   return successResponse<UserResponse>({ data: { User }, status: 200 })
-  // }
+  @Auth([RoleEnum.Admin,RoleEnum.User])
+  @Patch("delete-profile-picture")
+  async deleteProfilePic(
+    @User() user: UserDocument,
+  ): Promise<IResponse<UserResponse>> {
+    const User = await this.userService.deleteProfilePic(user);
+    return successResponse<UserResponse>({ data: { User }, status: 200 })
+  }
 
-  // @Auth([RoleEnum.Admin])
-  // @Patch("delete-cover-pictures")
-  // async deleteCoverPic(
-  //   @User() user: UserDocument,
-  // ): Promise<IResponse<UserResponse>> {
-  //   const User = await this.userService.deleteCoverPic(user);
-  //   return successResponse<UserResponse>({ data: { User }, status: 200 })
-  // }
+  @Auth([RoleEnum.Admin,RoleEnum.User])
+  @Patch("delete-cover-pictures")
+  async deleteCoverPic(
+    @User() user: UserDocument,
+  ): Promise<IResponse<UserResponse>> {
+    const User = await this.userService.deleteCoverPic(user);
+    return successResponse<UserResponse>({ data: { User }, status: 200 })
+  }
 
   
   @Auth([RoleEnum.Admin, RoleEnum.User])

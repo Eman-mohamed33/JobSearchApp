@@ -1,11 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Query, UsePipes, ValidationPipe } from "@nestjs/common";
-import { ChatService, IChatHistory } from "./chat.service";
+import { Body, Controller, Get, Param, Query, UsePipes, ValidationPipe } from "@nestjs/common";
+import { ChatService } from "./chat.service";
 import { Auth } from "src/common/decorators/auth.decorator";
 import { RoleEnum } from "src/common/enums/user.enum";
-import { IResponse, successResponse, User } from "src/common";
+import { IChatHistory, IResponse, successResponse, User } from "src/common";
 import { type UserDocument } from "src/DB/models/user.model";
-import { ChatBodyDto, ChatParamDto } from "./dto/chat.dto";
-import { ChatHistoryResponse, ChatResponse } from "./entities/chat.entity";
+import { ChatParamDto } from "./dto/chat.dto";
 import { GetAllDto } from "../job/dto/job.dto";
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
@@ -13,7 +12,7 @@ import { GetAllDto } from "../job/dto/job.dto";
 export class ChatController {
     constructor(private readonly chatService: ChatService) { }
     
-    @Auth([RoleEnum.User])
+    @Auth([RoleEnum.User, RoleEnum.Admin])
     @Get("/:chatId")
     async getChat(
         @User() user: UserDocument,

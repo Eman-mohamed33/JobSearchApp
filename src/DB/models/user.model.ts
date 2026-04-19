@@ -106,7 +106,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 userSchema.post("findOne", async function (doc) {
-  //const query = this.getQuery();
   if (doc && (doc.mobileNumber as string)) {
     doc.mobileNumber = await decryptEncryption({ cipherText: doc.mobileNumber as string });
   }
@@ -118,6 +117,16 @@ userSchema.pre(["find", "findOne"], function (next) {
     this.setQuery({ ...query });
   } else {
     this.setQuery({ ...query, deletedAt: { $exists: false } });
+  }
+  next();
+});
+
+userSchema.pre(["find", "findOne", "findOneAndUpdate"], function (next) {
+  const query = this.getQuery();
+  if (query.paranoid === false) {
+    this.setQuery({ ...query });
+  } else {
+    this.setQuery({ ...query, bannedAt: { $exists: false } });
   }
   next();
 });

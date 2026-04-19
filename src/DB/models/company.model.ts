@@ -67,6 +67,16 @@ companySchema.pre(["find", "findOne", "findOneAndUpdate"], function (next) {
   next();
 });
 
+companySchema.pre(["find", "findOne", "findOneAndUpdate"], function (next) {
+  const query = this.getQuery();
+  if (query.paranoid === false) {
+    this.setQuery({ ...query });
+  } else {
+    this.setQuery({ ...query, bannedAt: { $exists: false } });
+  }
+  next();
+});
+
 export const CompanyModel = MongooseModule.forFeature([
   {
     name: Company.name,

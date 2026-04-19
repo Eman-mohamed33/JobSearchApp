@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { ApplicationDocument, ApplicationRepository, CompanyRepository, JobDocument, JobRepository, lean } from "src/DB";
 import { CreateJobBodyDto, GetAllDto, JobParamDto, UpdateJobBodyDto } from "./dto/job.dto";
 import { UserDocument } from "src/DB/models/user.model";
@@ -8,6 +8,7 @@ import { emailEvent } from "src/common/utils/events/email.event";
 import { UserRepository } from "src/DB/repositories/user.repository";
 import { RealTimeGateway } from "../gateway/gateway";
 import { createExcelSheet } from "src/common/utils/files/Excelsheet.file";
+import { CloudinaryService } from "src/common/services/cloudinary.service";
 
 
 @Injectable()
@@ -18,18 +19,18 @@ export class JobService {
         private readonly companyRepository: CompanyRepository,
         private readonly userRepository: UserRepository,
         private readonly realTimeGateway: RealTimeGateway,
+        private readonly cloudinaryService: CloudinaryService,
     ) { }
     
-    async findCompanyById() {
-        
-    }
+
     async addJob(user: UserDocument, body: CreateJobBodyDto, companyId: Types.ObjectId):
         Promise<JobDocument | lean<JobDocument>> {
+        companyId = new Types.ObjectId(companyId);
         const company = await this.companyRepository.findOne({
             filter: {
                 $or: [
                     { createdBy: user._id, },
-                    { hRs: user._id },
+                    { hRs: { $in: [user._id ]} },
                 ],
                 approvedByAdmin: true,
                 _id: companyId,
@@ -61,7 +62,6 @@ export class JobService {
             filter: {
                 $or: [
                     { createdBy: user._id, },
-                    { hRs: user._id },
                 ],
                 approvedByAdmin: true,
                 _id: companyId,
@@ -69,10 +69,8 @@ export class JobService {
         });
 
          if (!company) {
-             throw new NotFoundException("Fail to find this company");
+             throw new NotFoundException("Fail to find this company or You're not company owner");
         }
-
-        
 
        
 
@@ -102,11 +100,11 @@ export class JobService {
         const company = await this.companyRepository.findOne({
             filter: {
                 _id: param.companyId,
+                hRs: { $in: [user._id] },
                 approvedByAdmin: true,
             }
         })
 
-        console.log(company?.hRs);
         if (!company) {
             throw new NotFoundException("Company Not Exist or You're not company hr")
         }
@@ -117,6 +115,12 @@ export class JobService {
             }
         });
 
+        await this.applicationRepository.deleteMany({
+            filter: {
+                jobId: Types.ObjectId.createFromHexString(param.jobId.toString()),
+            }
+        });
+        
         if (!job) {
             throw new NotFoundException("Fail to delete this job");
         }
@@ -126,8 +130,6 @@ export class JobService {
 
     async getOneJobForSCompany(param: JobParamDto):
         Promise<JobDocument | lean<JobDocument>> {
-        console.log(param.jobId);
-        console.log(typeof param.jobId);
 
         const job = await this.jobRepository.findOne({
             filter: {
@@ -253,38 +255,50 @@ export class JobService {
         return applications;
     }
 
-    async applyToJob(user: UserDocument, jobId: Types.ObjectId,
-            companyId: Types.ObjectId):Promise<ApplicationDocument> {
+    async applyToJob(user: UserDocument, jobId: Types.ObjectId, companyId: Types.ObjectId,
+        file: Express.Multer.File): Promise<ApplicationDocument> {
         
-            const job = await this.jobRepository.findOne({
-                filter: {
-                    _id: jobId,
+        const job = await this.jobRepository.findOne({
+            filter: {
+                _id: jobId,
                     
-                }
-            });
+            }
+        });
            
 
-            if (!job) {
-                throw new NotFoundException("Fail to find this job");
-            }
+        if (!job) {
+            throw new NotFoundException("Fail to find this job");
+        }
         
-            // const Cv = await this.s3Service.uploadFile({
-            //     storageApproach: StorageEnum.Disk,
-            //     file,
-            //     path: `company/${companyId.toString()}/job/${jobId.toString()}cVs`,
-            // });
 
-            const [application] = await this.applicationRepository.create({
-                data: [{
-                    userId: user._id,
-                    jobId: job._id,
-                    // userCv: {
-                    //     secure_url: Cv,
-                    //     public_id: Cv,
-                    // }
+        const userCv = await this.cloudinaryService.uploadFile({
+            file: file.path,
+            path: `company/${companyId.toString()}/job/${jobId.toString()}/application/${user._id.toString()}/cVs`,
+        });
+        const existingApplication = await this.applicationRepository.findOne({
+            filter: {
+                userId: user._id,
+                jobId: job._id,
+            }
+        });
+
+        if (existingApplication) {
+            existingApplication.userCv = userCv;
+            await existingApplication.save();
+            await this.cloudinaryService.destroyFile({
+                public_id: existingApplication.userCv.public_id,
+            })
+            throw new ConflictException("You have already applied for this job.");
+        }
+
+        const [application] = await this.applicationRepository.create({
+            data: [{
+                userId: user._id,
+                jobId: job._id,
+                userCv,
                 
-                }]
-            });
+            }]
+        });
 
         const notification = {
             title: "New Application Received! 🚀",
@@ -297,13 +311,9 @@ export class JobService {
             timestamp: new Date()
         }
         
-
         this.realTimeGateway.Submitting_Notification(job.addedBy.toString(), notification);
         
-            return application;
-    
-       
-    
+        return application;
     }
 
     async acceptOrRejectApplication(user: UserDocument, param: JobParamDto,
@@ -325,17 +335,10 @@ export class JobService {
         if (!job) {
             throw new BadRequestException("You're not one of the company's HR staff.");
         }
-
-        console.log(typeof param.jobId);
-        console.log(typeof param.companyId);
-        console.log(typeof param.userId);
-        
         
         const objectId = new Types.ObjectId(param.jobId);
         const objectId2 = new Types.ObjectId(param.userId);
-   console.log(typeof param.jobId);
-        console.log(typeof param.companyId);
-        console.log(typeof param.userId);
+
         const application = await this.applicationRepository.findOneAndUpdate({
             filter: {
                 jobId: objectId,
@@ -353,10 +356,8 @@ export class JobService {
         if (!application) {
             throw new NotFoundException("application not exist");
         }
-        console.log('Comparison:', application.status === StatusEnum.Accepted)
-        if (application.status === StatusEnum.Accepted) {
-            console.log("lkkkkkkkkkkkkkkkk;;;;;;;kk");
-            
+    
+        if (application.status === StatusEnum.Accepted) {    
             emailEvent.emit("acceptApplication", {
                 to: findUser?.email,
                 userName: findUser?.userName,
@@ -376,8 +377,6 @@ export class JobService {
     }
 
     async allApplicationsInExcelSheet(companyId: Types.ObjectId, date: Date) {
-         console.log(companyId);
-console.log(typeof companyId);
          
          const coId = new Types.ObjectId(companyId);
 
@@ -397,22 +396,13 @@ console.log(typeof companyId);
          jobs.forEach((job: JobDocument) => {
              jobsIds.push(job._id as unknown as Types.ObjectId)
          });
-         console.log({ jobs });
-        console.log({ date });
+      
         date = new Date(date); 
-        const isoDate  = date.toISOString();
-        console.log({ isoDate  });
-         
-         console.log({jobsIds});
-         
         const start = new Date(date);
         start.setHours(0,0,0,0);
         const end = new Date(date);
         end.setHours(23,59,59,999);
-        console.log(date);
-        
-        console.log(start);
-        console.log(end);
+      
         
         
         const applications = await this.applicationRepository.find({
@@ -425,7 +415,6 @@ console.log(typeof companyId);
             }
         });
 
-         console.log({applications});
          
          if (!applications) {
              throw new NotFoundException("Applications not found");

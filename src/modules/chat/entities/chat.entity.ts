@@ -1,5 +1,4 @@
-import { IChat } from "src/common";
-import { IChatHistory } from "../chat.service";
+import { IChat, IChatHistory } from "src/common";
 
 export class ChatResponse {
   chat: IChat;

@@ -32,17 +32,6 @@ export class AdminResolver {
 
         const companies = await this.companyRepository.find({
             filter: {},
-            // options: {
-            //     populate: [
-            //         {
-            //             path: "createdBy",
-            //             select:"firstName"
-            //         },
-            //         // {
-            //         //     path:"hRs"
-            //         // }
-            //     ]
-            // }
         })
 
         return { users, companies };
@@ -67,6 +56,7 @@ export class AdminResolver {
         const user = await this.userRepository.findOneAndUpdate({
             filter: {
                 _id: userId,
+                paranoid: false,
             },
             update
         });
@@ -84,6 +74,18 @@ export class AdminResolver {
         @Args("action") action: BanEnum,
     ): Promise<OneCompanyResponse> {
 
+        const objectId = new Types.ObjectId(companyId);
+        const company = await this.companyRepository.findOne({
+            filter: {
+                _id: objectId,
+                paranoid: false,
+            },
+        });
+        
+        if (!company) {
+            throw new GraphQLError("Fail to find this company");
+        }
+
         let update: UpdateQuery<CompanyDocument> = {
             bannedAt: new Date(),
         };
@@ -94,16 +96,12 @@ export class AdminResolver {
             };
         }
 
-        const company = await this.companyRepository.findOneAndUpdate({
+        const UpdatedCompany = await this.companyRepository.updateOne({
             filter: {
-                _id: companyId,
+                _id: objectId,
             },
-            update
-        });
-
-        if (!company) {
-            throw new GraphQLError("Fail to find this company");
-        }
+            update,
+        });       
         return company;
     }
 
@@ -117,7 +115,7 @@ export class AdminResolver {
         const company = await this.companyRepository.findOneAndUpdate({
             filter: {
                 _id: Types.ObjectId.createFromHexString(companyId),
-               // legalAttachment: { $exists: true },
+                legalAttachment: { $exists: true },
             },
             update: {
                 approvedByAdmin: true,

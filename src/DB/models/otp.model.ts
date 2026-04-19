@@ -1,7 +1,7 @@
-import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { TypeEnum } from 'src/common';
-import { IOtp } from 'src/common/interfaces/otp.interface';
+import { MongooseModule, Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Types } from "mongoose";
+import { TypeEnum } from "src/common";
+import { IOtp } from "src/common/interfaces/otp.interface";
 
 @Schema({
   timestamps: true,

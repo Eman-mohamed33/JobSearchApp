@@ -36,27 +36,33 @@ export class CloudinaryService {
 
 
 
-    destroyFile = async ({ public_id = "" }: { public_id: string;}) => {
-    return await cloudinary.uploader.destroy(public_id);
-};
+    destroyFile = async ({ public_id = "" }: { public_id: string; }) => {
+        return await cloudinary.uploader.destroy(public_id);
+    };
 
- uploadFiles = async ({ files = [], path = "general" } = {}) => {
-     const attachments: IPicture[] = [];
-    for (const file of files) {
-        const { public_id, secure_url } = await this.uploadFile({ file, path });
-        attachments.push({ public_id, secure_url });
-    }
-    return attachments;
-};
+    uploadFiles = async ({ files = [], path = "general" }: { files: string[], path?: string }) => {
+        const attachments: IPicture[] = [];
+        for (const file of files) {
+            const { public_id, secure_url } = await this.uploadFile({ file, path });
+            attachments.push({ public_id, secure_url });
+        }
+        return attachments;
+    };
 
-  deleteResources = async ({ public_ids = [],
-    options = {
-        type: "upload",
-        resource_type:"image"
-    }
-} = {}) => {
-    return await cloudinary.api.delete_resources(public_ids, options);
-};
+    deleteResources = async ({ public_ids = [],
+        options = {
+            type: "upload",
+            resource_type: "image"
+        }
+    }: {
+        public_ids: string[],
+        options?: {
+            type: string,
+            resource_type: string
+        }
+    }) => {
+        return await cloudinary.api.delete_resources(public_ids, options);
+    };
 
   deleteFolderByPrefix = async ({
     prefix = ""

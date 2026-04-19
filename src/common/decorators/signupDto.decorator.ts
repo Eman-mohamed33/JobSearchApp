@@ -9,8 +9,6 @@ import {
 @ValidatorConstraint({ name: "match-between-fields", async: false })
 export class MatchBetweenFields implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments): boolean {
-    console.log({ value, args, mismatch: args.object[args.constraints[0]] });
-
     return value === args.object[args.constraints[0]];
   }
 
@@ -44,6 +42,6 @@ export class CheckDateValidOrNot implements ValidatorConstraintInterface {
 
   defaultMessage(args: ValidationArguments) {
     // here you can provide default error message if validation failed
-    return "Age must be smaller than 18 years";
+    return "Age must be greater than 18 years";
   }
 }

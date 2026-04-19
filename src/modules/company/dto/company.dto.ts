@@ -22,8 +22,8 @@ export class MongoDBIds implements ValidatorConstraintInterface {
   validate(ids: Types.ObjectId[], args: ValidationArguments) {
     for (const id of ids) {
       if (!Types.ObjectId.isValid(id)) {
-          return false;
-}
+        return false;
+      }
     }
     return true;
   }
@@ -54,6 +54,7 @@ export class AddCompanyBodyDto implements Partial<ICompany> {
   @IsNotEmpty()
   address: string;
 
+  @Type(() => Number)
   @IsNumber()
   numberOfEmployees: number;
 

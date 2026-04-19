@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { OtpRepository } from 'src/DB';
 import { ConfirmEmailBodyDto, LoginBodyDto, ResendConfirmEmailOtp, ResetPasswordBodyDto, SignupBodyDto, VerifyGmail } from './dto/auth.dto';
 import { Types } from 'mongoose';
@@ -75,7 +75,6 @@ export class AuthenticationService {
     const otp = String(generateOtp());
     await this.createConfirmEmailOtp(user._id, otp);
     emailEvent.emit(TypeEnum.ConfirmEmail, { to: email, otp });
-    console.log(user);
     return 'Done';
   }
 

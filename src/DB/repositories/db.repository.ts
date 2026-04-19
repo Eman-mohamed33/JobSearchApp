@@ -18,7 +18,6 @@ import {
 import { Model } from 'mongoose';
 
 export type lean<T> = FlattenMaps<T>;
-
 export abstract class DatabaseRepository<
     TRawDocument,
     TDocument = HydratedDocument<TRawDocument>,

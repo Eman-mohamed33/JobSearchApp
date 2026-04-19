@@ -4,7 +4,6 @@ import { acceptApplicationTemplate, sendEmail, verifyEmailTemplate } from "../em
 import { TypeEnum } from "src/common/enums";
 import { log } from "node:console";
 
-
 export const emailEvent = new EventEmitter();
 interface IEmail extends Mail.Options {
   otp: string;
@@ -28,7 +27,7 @@ emailEvent.on(TypeEnum.ConfirmEmail, async (data: IEmail) => {
   }
 });
 
-emailEvent.on('SendForgotPasswordCode', async (data: IEmail) => {
+emailEvent.on("SendForgotPasswordCode", async (data: IEmail) => {
   try {
     ((data.subject = 'Forgot Password Code'),
       (data.html = verifyEmailTemplate({

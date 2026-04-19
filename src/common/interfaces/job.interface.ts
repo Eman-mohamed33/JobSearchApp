@@ -17,6 +17,7 @@ export interface IJob {
   closed: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date;
 
   jobLocation: JobLocationEnum;
   workingTime: WorkingTimeEnum;

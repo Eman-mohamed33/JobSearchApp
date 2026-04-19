@@ -8,14 +8,7 @@ import { UserRepository } from "src/DB/repositories/user.repository";
 @Module({
   imports: [ChatModel, UserModel, CompanyModel, ChatModule],
 
-  providers: [
-    RealTimeGateway,
-    // ChatService,
-  ChatRepository,
-   UserRepository,
-   CompanyRepository,
-    TokenService,
-  ],
+  providers: [RealTimeGateway, ChatRepository, UserRepository, CompanyRepository, TokenService],
   exports: [RealTimeGateway],
 })
 export class RealTimeModule {}

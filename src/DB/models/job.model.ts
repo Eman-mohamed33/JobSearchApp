@@ -38,6 +38,8 @@ export class Job implements IJob {
   workingTime: WorkingTimeEnum;
   @Prop({ type: String, enum: SeniorityLevelEnum, required: true })
   seniorityLevel: SeniorityLevelEnum;
+  @Prop({ type: Date })
+    deletedAt: Date;
 }
 
 export type JobDocument = HydratedDocument<Job>;
@@ -47,6 +49,16 @@ jobSchema.virtual("applications", {
   localField: "_id",
   foreignField: "Job",
   ref: "Application",
+});
+
+jobSchema.pre(["find", "findOne", "findOneAndUpdate"], function (next) {
+  const query = this.getQuery();
+  if (query.paranoid === false) {
+    this.setQuery({ ...query });
+  } else {
+    this.setQuery({ ...query, deletedAt: { $exists: false } });
+  }
+  next();
 });
 
 export const JobModel = MongooseModule.forFeature([
