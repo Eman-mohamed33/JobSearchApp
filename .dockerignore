@@ -1,0 +1,7 @@
+/node_modules
+/dist
+/config
+Dockerfile
+.dockerignore
+docker-compose*
+/test

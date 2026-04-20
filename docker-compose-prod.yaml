@@ -1,0 +1,12 @@
+version: '5.1.1'
+services:
+  job-search-app-prod:
+    build: 
+      context: .
+      target: prod
+    container_name: job-search-app-prod
+    ports:
+      - "4000:3000"
+    env_file:
+      - ./config/.env.production
+    
