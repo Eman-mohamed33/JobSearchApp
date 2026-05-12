@@ -62,16 +62,6 @@ docker-compose up
 # Or run locally
 npm run start:dev
 ```
-
----
-
-## 🔑 Environment Variables
-
-```env
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-```
-
 ---
 
 ## 👩‍💻 Author
