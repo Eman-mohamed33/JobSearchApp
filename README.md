@@ -34,14 +34,16 @@ A full-scale job search platform built with NestJS, featuring real-time chat, in
 
 ```
 src/
+├── common/
+├── DB/
 ├── modules/
-│   ├── user/
-│   ├── company/
+|   ├── auth/
+|   ├── chat/
+|   ├── company/
+|   ├── gateway/
 │   ├── job/
-│   ├── application/
-│   └── chat/
-├── auth/
-├── graphql/
+│   └── user/
+├── schema.gql/
 └── main.ts
 ```
 
