@@ -26,7 +26,7 @@ import { ChatModule } from "./modules/chat/chat.module";
       ],
     }),
     ConfigModule.forRoot({
-      envFilePath: resolve("./config/.env.development"),
+      envFilePath: resolve("./config/.env.production"),
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.DB_URI as string, {
